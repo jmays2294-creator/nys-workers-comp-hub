@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "nys-workers-comp-hub": {
+      "type": "http",
+      "url": "https://ltibymvlytodkemdeeox.supabase.co/functions/v1/nys-workers-comp-hub/mcp"
+    }
+  }
+}
