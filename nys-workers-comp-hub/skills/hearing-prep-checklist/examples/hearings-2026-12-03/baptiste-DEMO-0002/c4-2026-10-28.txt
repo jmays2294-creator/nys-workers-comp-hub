@@ -1,0 +1,10 @@
+FICTIONAL EXAMPLE. Not a real person, case or hearing. For trying the hearing-prep-checklist skill.
+
+DOCTOR'S PROGRESS REPORT (C-4.2, fictional, summarized)
+Patient: T. Baptiste (DEMO)      WCB Case Number: DEMO-0002
+Treating doctor: Dr. Example Treater (fictional)      Date of exam: 10/28/2026
+
+- History: low back pain after lifting boxes at work on 06/15/2026.
+- Opinion on causation: the low back injury is causally related to the incident described.
+- Work status: temporarily totally disabled. Re-evaluation in 4 weeks.
+- Plan: physical therapy; MRI of the lumbar spine requested.

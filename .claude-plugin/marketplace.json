@@ -6,7 +6,7 @@
     {
       "name": "nys-workers-comp-hub",
       "source": "./nys-workers-comp-hub",
-      "description": "New York State workers' compensation in Claude: calculators, rates, forms, the glossary and explainers, case law, a NYC doctor finder, nine free skills, and sending cases to your Comp Desk Pro Workspace."
+      "description": "New York State workers' compensation in Claude: calculators, rates, forms, the glossary and explainers, case law, a NYC doctor finder, ten free skills, and sending cases to your Comp Desk Pro Workspace."
     }
   ]
 }

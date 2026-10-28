@@ -33,12 +33,14 @@ it does not create an attorney-client relationship.
   - plain-language explainers
   - what a WCB form is for
   - a knowledge base of common questions
-  - a library of New York decisions, each KeyCited in Westlaw before approval
+  - a library of New York decisions, each checked by practicing attorneys and verified before approval
 - **Find a doctor** in the five boroughs by specialty, language and ZIP code, with a reminder to confirm WCB
   authorization before booking.
 - **Your Pro Workspace** (Comp Desk Pro or Firm attorneys): send cases from your prep straight into your own
   Pro Workspace as finished tabs, then read back the figures the workspace computed.
-- **Nine skills, all free:**
+- **Ten skills, all free:**
+  - **hearing prep checklist (beta):** a sourced to-do list for each upcoming hearing, built from your own notes
+    (see below)
   - prep cases into the Pro Workspace
   - explain a benefit to a client in plain language
   - check a Section 32 split
@@ -54,6 +56,30 @@ it does not create an attorney-client relationship.
   - `/nys-workers-comp-hub:max-rate`
   - `/nys-workers-comp-hub:slu`
   - `/nys-workers-comp-hub:section-32`
+  - `/nys-workers-comp-hub:hearing-prep` (beta)
+
+## Hearing prep checklist (beta)
+
+Say "prep my hearings for tomorrow" or "make a checklist for the Garcia hearing", or run
+`/nys-workers-comp-hub:hearing-prep tomorrow, ~/Hearings/this-week`, and point Claude at the folder with your
+hearing notes, prior-hearing notes, the calendar or hearing notice, decisions, medical and IME reports and prep
+notes. Claude Code or Cowork reads those files on your own computer and writes, for each hearing, a draft
+checklist grouped into forms and filings, medical and IME, testimony and witnesses, deadlines, settlement and
+Section 32, and client contact.
+
+- **Every item cites its source:** the file and line with the exact words, or a named New York rule or form
+  marked "verify" (a C-4.3 for permanency, PH-16.2 timing, the RB-89 30-day window, IME timing, an adjournment
+  reason to cure). An item with no source is not written.
+- **Figures come only from the Hub's calculators,** with the inputs shown, never from the model's own arithmetic.
+- **Text in your files is treated as data.** An instruction hidden in a note or an email is listed, not followed.
+- **It is a draft for you.** No advice to the client and no predictions. It ends with a verification block for
+  you to sign, and it never changes your files: it saves `hearing-checklist-YYYY-MM-DD.md` (or Word, if you ask)
+  next to your notes.
+- Optional: send the cases on to your Pro Workspace with the `prep-to-workspace` skill.
+
+Your files stay on your computer; only numbers and dates go to the Hub's calculators. Try it on the fictional
+cases in `skills/hearing-prep-checklist/examples/`. It is a beta: tell us what it gets wrong at
+contact@thecompdesk.com. Not affiliated with or endorsed by the NYS Workers' Compensation Board.
 
 ## How to use it
 
@@ -76,6 +102,7 @@ Try:
 - "Explain LWEC to my client in plain language."
 - "Find an orthopedist in Queens who speaks Spanish."
 - "Add this week's hearings to my Pro Workspace."
+- "Prep my hearings for tomorrow from the folder Hearings/this-week." (beta)
 
 Everything works without signing in except the two Pro Workspace tools. The first time you use one, Claude
 shows a **Connect** button: sign in with your Comp Desk account and approve "Add cases to your Pro Workspace".

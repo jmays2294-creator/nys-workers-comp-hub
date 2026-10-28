@@ -1,0 +1,11 @@
+FICTIONAL EXAMPLE. Not a real person, case or hearing. For trying the hearing-prep-checklist skill.
+
+INDEPENDENT MEDICAL EXAMINATION REPORT (fictional, summarized)
+Examinee: A. Garcia (DEMO)       WCB Case Number: DEMO-0001
+Examining physician: Dr. Example Examiner, orthopedic surgery (fictional)
+Date of examination: 10/20/2026
+
+Opinion:
+- The claimant has reached maximum medical improvement.
+- Schedule loss of use of the right arm: 20%.
+- Report sent to the Board and the parties on 10/27/2026.

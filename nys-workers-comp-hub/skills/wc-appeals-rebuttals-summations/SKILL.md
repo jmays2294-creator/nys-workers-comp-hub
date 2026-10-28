@@ -43,7 +43,7 @@ themselves. Never submit anything to the Board.**
 - **Deadlines:** state the filing deadline for this filing to the attorney and flag it if it is close or has
   passed. For the RB-89.1 and RB-89.2, take each filing's own deadline from the Board's current rules and the
   form's instructions (`lookup_wcb_form`). Never assume a deadline is still open.
-- **Law:** cite only cases returned by `search_case_law` (The Comp Desk's Westlaw-verified library) or that the
+- **Law:** cite only cases returned by `search_case_law` (The Comp Desk's verified library) or that the
   attorney supplies, and only for what they hold. Figures (rates, awards) come from the Hub's calculators.
 - Leave every filing as a draft in the attorney's document tool for review and signature.
 

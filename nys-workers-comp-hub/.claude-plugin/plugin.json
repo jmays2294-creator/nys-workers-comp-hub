@@ -1,8 +1,8 @@
 {
   "name": "nys-workers-comp-hub",
   "displayName": "New York State Workers' Compensation Hub",
-  "version": "1.0.0",
-  "description": "New York State workers' compensation in Claude: benefit calculators (AWW, weekly rates and the max/min by date of accident, SLU, LWEC, CCP awards, Section 32 splits, Burns liens, apportionment), formulas with citations, the glossary, plain-language explainers, WCB forms, Westlaw-verified case law, a NYC doctor finder, nine free workflow skills, and sending cases to your Comp Desk Pro Workspace.",
+  "version": "1.1.0",
+  "description": "New York State workers' compensation in Claude: benefit calculators (AWW, weekly rates and the max/min by date of accident, SLU, LWEC, CCP awards, Section 32 splits, Burns liens, apportionment), formulas with citations, the glossary, plain-language explainers, WCB forms, case law from a verified library, a NYC doctor finder, ten free workflow skills (including a beta hearing prep checklist built from your own notes), and sending cases to your Comp Desk Pro Workspace.",
   "author": {
     "name": "The Comp Desk",
     "email": "contact@thecompdesk.com",
