@@ -19,13 +19,18 @@ it does not create an attorney-client relationship.
   - schedule loss of use, with the protracted healing period, employer reimbursement and the prior-counsel
     fee split
   - LWEC / non-schedule awards, with the 130-week credit
-  - awards for benefit periods (CCP)
+  - awards for benefit periods (CCP), and the full Pro Workspace CCP engine (every designation, amending,
+    already-paid periods, reimbursement scopes, the CCP fee)
+  - schedule loss of use percentages from range of motion and for a joint replacement
+  - weeks between dates, the attorney fee split with prior counsel, AWW with tips, board and concurrent wages
+  - the radiculopathy severity rank
   - Section 32 splits
   - Burns/Kelly third-party lien cost share
   - SLU apportionment between claims
   - the notice-to-employer deadline
 
-  When an input is missing, a calculator says so and calculates nothing.
+  When an input is missing, a calculator says so and calculates nothing. Every result shows its steps, with the
+  rule behind each.
 - **Reference**, from approved sources only:
   - formulas, with their statutory citations (each flagged "not yet attorney-reviewed" until The Comp Desk's
     attorney review is done)
@@ -38,9 +43,15 @@ it does not create an attorney-client relationship.
   authorization before booking.
 - **Your Pro Workspace** (Comp Desk Pro or Firm attorneys): send cases from your prep straight into your own
   Pro Workspace as finished tabs, then read back the figures the workspace computed.
-- **Ten skills, all free:**
+- **Your hearing notes** (Comp Desk Pro or Firm attorneys): the notes you format in your Pro Workspace and send with
+  "Post Hearing Notes in Case Management OS via Claude" reach your own Claude, which posts them into your
+  case-management system (Litify, Clio, MyCase, Filevine, Smokeball, CASEpeer, Needles, PracticePanther or another)
+  after showing you a preview, then marks them posted.
+- **Eleven skills, all free:**
   - **hearing prep checklist (beta):** a sourced to-do list for each upcoming hearing, built from your own notes
     (see below)
+  - **enter hearing notes (beta):** post your queued hearing notes into your case-management system, one at a
+    time, with a preview first; also as a scheduled task
   - prep cases into the Pro Workspace
   - explain a benefit to a client in plain language
   - check a Section 32 split
@@ -102,10 +113,12 @@ Try:
 - "Explain LWEC to my client in plain language."
 - "Find an orthopedist in Queens who speaks Spanish."
 - "Add this week's hearings to my Pro Workspace."
+- "Post my queued hearing notes into Clio." (beta)
 - "Prep my hearings for tomorrow from the folder Hearings/this-week." (beta)
 
-Everything works without signing in except the two Pro Workspace tools. The first time you use one, Claude
-shows a **Connect** button: sign in with your Comp Desk account and approve "Add cases to your Pro Workspace".
+Everything works without signing in except the Pro Workspace and hearing-notes tools. The first time you use one,
+Claude shows a **Connect** button: sign in with your Comp Desk account and approve what it asks for ("Add cases to
+your Pro Workspace", "Read the hearing notes you send to be posted", "Mark the hearing notes Claude posted for you").
 
 ## Data and privacy
 
@@ -116,6 +129,9 @@ shows a **Connect** button: sign in with your Comp Desk account and approve "Add
   files. For rate limiting it keeps a counter keyed by a one-way hash of the connection, for two days.
 - The Pro Workspace tools send the cases you approve to your own Pro Workspace only. The workspace's import
   receipts are kept 48 hours.
+- The hearing-notes tools return only the notes you sent to be posted (never drafts), and only to your own
+  signed-in Claude; marking a note posted changes its status and nothing else. The notes stay in your Pro Workspace
+  account; the connector keeps no copy and logs no note text.
 - The skills run in Claude. Client material they work with stays in your own files, browser and email, and is
   never sent to The Comp Desk.
 - Privacy Policy: https://thecompdesk.com/legal/privacy · Terms: https://thecompdesk.com/terms ·
