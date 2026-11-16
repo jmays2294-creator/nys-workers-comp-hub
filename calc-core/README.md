@@ -37,3 +37,10 @@ Calc.minRateForDOA('2025-09-15');                // 325
 Calc.getCappedTT(2400, 1222.42, 325);            // 1222.42 (capped at the maximum)
 Calc.computeSLU({ rows: [{ bp: 'Arm', pct: 25 }], tt: 800 }); // 78 weeks, $62,400 gross, $9,360 fee, $53,040 net
 ```
+
+## Locked: changes need the maintainers' approval
+
+Once the maintainers have confirmed every calculation, `calc-core.js` and the tests that check it are locked. Only
+the four maintainers may edit them, and any change needs the approval of all four, or at least a majority. Each
+change records who proposed it, who approved it, and why. These are the formulas every user relies on, so every
+change to them is accountable.
