@@ -48,7 +48,7 @@ receive only numbers and dates, never a name, a case number or a quote.
 - Use the folder or files the attorney points to. If they point to nothing, ask for the folder. Do not search the
   rest of the computer.
 - List every file in the folder (and its subfolders) and read each one: Markdown, text, PDF, Word, email exports.
-  If a file cannot be read (a scanned PDF with no text, a password), put it under "Not found in the files" as
+  If a file cannot be read (a scanned PDF with no text, a locked file), put it under "Not found in the files" as
   "not read", with the reason.
 
 ## Step 2: find the hearings
@@ -128,7 +128,7 @@ End the file with this block, word for word:
 
 Only when the attorney asks ("add these to my workspace"), hand the cases to the `prep-to-workspace` skill. It
 sends facts only (claimant label, WCB number, hearing date, date of accident, AWW found, calculator inputs) to the
-attorney's own Pro Workspace after showing them what will be sent. It needs a Comp Desk Pro or Firm sign-in.
+attorney's own Pro Workspace after showing them what will be sent. It needs a Comp Desk Pro or Firm account.
 
 ## Example
 

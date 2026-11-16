@@ -47,7 +47,7 @@ it does not create an attorney-client relationship.
   "Post Hearing Notes in Case Management OS via Claude" reach your own Claude, which posts them into your
   case-management system (Litify, Clio, MyCase, Filevine, Smokeball, CASEpeer, Needles, PracticePanther or another)
   through that system's own connector in Claude, after showing you a preview, or prepares an entry you paste in
-  yourself; it never uses your sign-in to that system. Then it marks them posted.
+  yourself. Then it marks them posted.
 - **Eleven skills, all free:**
   - **hearing prep checklist (beta):** a sourced to-do list for each upcoming hearing, built from your own notes
     (see below)
@@ -117,8 +117,8 @@ Try:
 - "Post my queued hearing notes into Clio." (beta)
 - "Prep my hearings for tomorrow from the folder Hearings/this-week." (beta)
 
-Everything works without signing in except the Pro Workspace and hearing-notes tools. The first time you use one,
-Claude shows a **Connect** button: sign in with your Comp Desk account and approve what it asks for ("Add cases to
+Everything works without an account except the Pro Workspace and hearing-notes tools. The first time you use one,
+Claude shows a **Connect** button: connect your Comp Desk account and approve what it asks for ("Add cases to
 your Pro Workspace", "Read the hearing notes you send to be posted", "Mark the hearing notes Claude posted for you").
 
 ## Data and privacy

@@ -1,7 +1,7 @@
 ---
 name: enter-hearing-notes
-description: Post a New York workers' compensation attorney's hearing notes, formatted in their Comp Desk Pro Workspace and queued with "Post Hearing Notes in Case Management OS via Claude", into the case-management system they use (Litify on Salesforce, Clio, MyCase, Filevine, Smokeball, CASEpeer, Needles, PracticePanther or another). Reads the queued notes with list_hearing_notes and get_hearing_note (Pro or Firm sign-in) or from the block the attorney pastes, finds the matter by WCB number, maps body parts (ANCR, PFME), awards, WCB status, outcome lines and to-dos to fields the attorney's own screen actually shows, shows a preview and writes nothing until the attorney says yes, one note at a time, never invents a field, then marks the note posted. Runs on demand or as a scheduled task. Use when the attorney says "post my hearing notes", "enter today's hearing notes in Clio", "post the notes to Litify", "check for queued hearing notes".
-compatibility: Claude with the New York State Workers' Compensation Hub connector, signed in with a Pro or Firm Comp Desk account, and, to write the entry for them, that case-management system's own connector in Claude. Without one, it prepares a paste-ready entry the attorney pastes in themselves.
+description: Post a New York workers' compensation attorney's hearing notes, formatted in their Comp Desk Pro Workspace and queued with "Post Hearing Notes in Case Management OS via Claude", into the case-management system they use (Litify on Salesforce, Clio, MyCase, Filevine, Smokeball, CASEpeer, Needles, PracticePanther or another). Reads the queued notes with list_hearing_notes and get_hearing_note (Pro or Firm account) or from the block the attorney pastes, finds the matter by WCB number, maps body parts (ANCR, PFME), awards, WCB status, outcome lines and to-dos to fields the attorney's own screen actually shows, shows a preview and writes nothing until the attorney says yes, one note at a time, never invents a field, then marks the note posted. Runs on demand or as a scheduled task. Use when the attorney says "post my hearing notes", "enter today's hearing notes in Clio", "post the notes to Litify", "check for queued hearing notes".
+compatibility: Claude with the New York State Workers' Compensation Hub connector, connected to a Pro or Firm Comp Desk account, and, to write the entry for them, that case-management system's own connector in Claude. Without one, it prepares a paste-ready entry the attorney pastes in themselves.
 metadata:
   title: Enter hearing notes into your case system (beta)
   kind: workflow
@@ -24,9 +24,8 @@ give no legal advice.
 - **Preview first, then wait for a yes.** Before anything is written, show exactly what goes into which field. Write
   nothing until the attorney approves that preview.
 - **One note at a time.** Finish one, report it, and wait for "next" before the next one.
-- **Never use, ask for or handle any sign-in, password, key or session** for the case-management system. Write
-  only through that system's own connector, which the attorney connected in Claude; otherwise prepare the
-  paste-ready entry and let the attorney paste it.
+- **Write only through that system's own connector,** which the attorney connected in Claude; otherwise prepare
+  the paste-ready entry and let the attorney paste it.
 - **Leave the final save to the attorney** unless they told you to save. If a system saves as soon as you press a
   button (some wizards save on their last "Next"), stop before that button and say so.
 - **Pick from the system's own lists.** A judge, a contact, a user to assign or a picklist value is chosen only when
@@ -46,7 +45,7 @@ Ask once, if you do not already know: "Which case-management system should these
 
 ## Step 2: get the note
 
-- With the Hub connector signed in: call `list_hearing_notes` (default: the **queued** ones, newest hearing first;
+- With the Hub connector connected: call `list_hearing_notes` (default: the **queued** ones, newest hearing first;
   pass `from` / `to` for a day or a week). Show the attorney the list (case label, WCB number, hearing date, purpose,
   WCB status, the system they chose) and confirm which to post. Then call `get_hearing_note` with the `id` for each,
   one at a time (it maps to the system the attorney chose unless you pass `target_system`).
