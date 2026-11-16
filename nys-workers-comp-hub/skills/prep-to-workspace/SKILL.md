@@ -1,6 +1,6 @@
 ---
 name: prep-to-workspace
-description: Turn a New York workers' compensation attorney's hearing prep or case file into finished case tabs in their own Comp Desk Pro Workspace, with the SLU, LWEC, CCP, Section 32, Burns and apportionment calculators filled in, so the workspace computes every figure. Gathers each case's facts from the WCB decisions and the file (AWW found, date of accident, body parts and SLU %, LWEC %, benefit periods), never guesses, shows the attorney what will be sent, sends it with add_workspace_cases (Pro or Firm sign-in) or hands over one paste block, then reads back the workspace's own figures. Use when the attorney says "add these cases to my workspace", "send the prep to the Pro Workspace", "build workspace tabs for this week's hearings".
+description: Turn a New York workers' compensation attorney's hearing prep or case file into finished case tabs in their own Comp Desk Pro Workspace, with the SLU, LWEC, CCP, Section 32, Burns and apportionment calculators filled in, so the workspace computes every figure. Gathers each case's facts from the WCB decisions and the file (AWW found, date of accident, body parts and SLU %, LWEC %, benefit periods), never guesses, shows the attorney what will be sent, sends it with add_workspace_cases (Pro or Firm account) or hands over one paste block, then reads back the workspace's own figures. Use when the attorney says "add these cases to my workspace", "send the prep to the Pro Workspace", "build workspace tabs for this week's hearings".
 metadata:
   title: Prep cases into the Pro Workspace
   kind: workflow
@@ -25,7 +25,7 @@ calculators compute every rate, award, fee and net.
 
 ## Step 1: the format
 
-Call `describe_case_schema` (no sign-in needed) and follow it exactly. It lists every field of every
+Call `describe_case_schema` (no account needed) and follow it exactly. It lists every field of every
 calculator, the body-part names the workspace accepts and two complete examples.
 
 ## Step 2: build each case
@@ -49,11 +49,11 @@ Competing opinions (treating doctor vs IME, before a decision): one calculator p
 
 1. Show the attorney a short table of what will be sent, case by case, and the missing list. Wait for their OK.
 2. Call `add_workspace_cases` (up to 25 cases per call). The first time, Claude shows a **Connect** card: the
-   attorney signs in with their Comp Desk account and approves "Add cases to your Pro Workspace".
+   attorney connects their Comp Desk account and approves "Add cases to your Pro Workspace".
 3. Each case comes back `queued`, `duplicate` / `already_imported` (unchanged), `updated`, or `refused` with the
    fields named. For a refusal, go back to the document and correct the fact, or drop the field and add it to
    the missing list. Never fix a refusal by inventing a value.
-4. **No sign-in, or not a Pro/Firm account?** Give the attorney ONE fenced ```json block with the whole batch:
+4. **Not connected, or not a Pro/Firm account?** Give the attorney ONE fenced ```json block with the whole batch:
    "Open the Pro Workspace → Import → Paste cases, paste it, press Check, then Add to workspace."
 
 ## Step 4: the workspace's figures

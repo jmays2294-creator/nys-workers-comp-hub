@@ -35,7 +35,7 @@ edits, signs and sends it. Never send anything.**
 ## 3. Weekly hearing-outcome notes
 - Read the outcome bullet points already in the active weekly prep document.
 - Format them into one clean note per case (case number, hearing date, outcome, next directions), ready for the
-  attorney to paste into their own system of record. This skill never logs into or writes to such a system.
+  attorney to paste into their own system of record. This skill never opens or writes to such a system.
 
 ## 4. Daily rundown
 - Pull today's hearings and depositions from the active weekly prep document.

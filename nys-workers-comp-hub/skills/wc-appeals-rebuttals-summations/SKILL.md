@@ -67,8 +67,7 @@ The Comp Desk's rule, the same in every Comp Desk assistant. From the most weigh
   again once it is filed.
 
 ## Where the facts come from (no case-management system assumed)
-1. **Browser:** the browser Claude is connected to, on the WCB eCase portal. The attorney logs in themselves;
-   never store or ask for credentials.
+1. **Browser:** the WCB eCase portal, which the attorney opens themselves in the browser Claude is connected to.
 2. **Local files:** the attorney's own tracker on disk.
 3. **The attorney:** if a deadline, a party's position or a case detail cannot be resolved from eCase or the
    tracker, ask before drafting.

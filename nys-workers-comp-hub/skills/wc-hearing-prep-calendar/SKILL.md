@@ -45,8 +45,8 @@ prep TBDs", "pull the case background for WCB# …" and "prep the 16.2s".
 - Leave every statement as a draft: the attorney reviews, signs and files it. Never submit a WCB filing.
 
 ## Where the facts come from (no case-management system assumed)
-1. **Browser:** the WCB eCase portal and the calendar source, in the browser Claude is connected to. The attorney
-   logs in themselves; never store or ask for credentials.
+1. **Browser:** the WCB eCase portal and the calendar source, which the attorney opens themselves in the browser
+   Claude is connected to.
 2. **Local files:** an existing prep document, calendar PDF or hearing notes on disk, updated in place.
 3. **The attorney:** anything neither the portal nor the files resolve, asked directly and recorded.
 
