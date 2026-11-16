@@ -1,7 +1,7 @@
 ---
 name: enter-hearing-notes
 description: Post a New York workers' compensation attorney's hearing notes, formatted in their Comp Desk Pro Workspace and queued with "Post Hearing Notes in Case Management OS via Claude", into the case-management system they use (Litify on Salesforce, Clio, MyCase, Filevine, Smokeball, CASEpeer, Needles, PracticePanther or another). Reads the queued notes with list_hearing_notes and get_hearing_note (Pro or Firm sign-in) or from the block the attorney pastes, finds the matter by WCB number, maps body parts (ANCR, PFME), awards, WCB status, outcome lines and to-dos to fields the attorney's own screen actually shows, shows a preview and writes nothing until the attorney says yes, one note at a time, never invents a field, then marks the note posted. Runs on demand or as a scheduled task. Use when the attorney says "post my hearing notes", "enter today's hearing notes in Clio", "post the notes to Litify", "check for queued hearing notes".
-compatibility: Claude with the New York State Workers' Compensation Hub connector, signed in with a Pro or Firm Comp Desk account, and a way into the attorney's case-management system - that system's own connector, or a browser Claude can drive where the attorney is already signed in. Without either, it prepares a paste-ready entry instead.
+compatibility: Claude with the New York State Workers' Compensation Hub connector, signed in with a Pro or Firm Comp Desk account, and, to write the entry for them, that case-management system's own connector in Claude. Without one, it prepares a paste-ready entry the attorney pastes in themselves.
 metadata:
   title: Enter hearing notes into your case system (beta)
   kind: workflow
@@ -24,8 +24,9 @@ give no legal advice.
 - **Preview first, then wait for a yes.** Before anything is written, show exactly what goes into which field. Write
   nothing until the attorney approves that preview.
 - **One note at a time.** Finish one, report it, and wait for "next" before the next one.
-- **Never enter a username or password,** never complete a sign-in, two-factor prompt or CAPTCHA. If the system is
-  not already signed in, stop and tell the attorney.
+- **Never use, ask for or handle any sign-in, password, key or session** for the case-management system. Write
+  only through that system's own connector, which the attorney connected in Claude; otherwise prepare the
+  paste-ready entry and let the attorney paste it.
 - **Leave the final save to the attorney** unless they told you to save. If a system saves as soon as you press a
   button (some wizards save on their last "Next"), stop before that button and say so.
 - **Pick from the system's own lists.** A judge, a contact, a user to assign or a picklist value is chosen only when
@@ -36,14 +37,12 @@ give no legal advice.
 
 ## Step 1: which system, and how you can reach it
 
-Ask once, if you do not already know: "Which case-management system should these go into?" Then use the first way
-in that works:
+Ask once, if you do not already know: "Which case-management system should these go into?" Then:
 
-1. **The system's own connector** (for example a Clio, MyCase or Filevine connector the attorney has connected).
-   Use its read tools to find the matter; use its write tools only after the preview is approved.
-2. **A browser** you can drive (Claude in Chrome, the built-in browser, or computer use) where the attorney is
-   already signed in to the system.
-3. **Neither:** prepare a paste-ready entry (Step 6) and tell the attorney where each part goes.
+1. **The system's own connector** (for example a Clio, MyCase or Filevine connector the attorney has connected in
+   Claude). Use its read tools to find the matter; use its write tools only after the preview is approved.
+2. **No connector for that system:** prepare a paste-ready entry (Step 6) and tell the attorney where each part goes.
+   Do not operate the system's website or app on the attorney's behalf.
 
 ## Step 2: get the note
 
@@ -74,7 +73,8 @@ this firm's actual fields) and `handling` (these same rules).
 
 ## Step 4: map the note to the screen in front of you
 
-Read the matter's actual screen (or the connector's fields) and build the mapping from what is really there. The
+Read the matter's actual fields through the connector (or, for a paste-ready entry, use the usual places below) and
+build the mapping from what is really there. The
 usual places, to be matched against the real screen:
 
 | From the note | Usually goes to | Rule |
@@ -92,10 +92,9 @@ usual places, to be matched against the real screen:
 
 ### Notes for specific systems (check each against the screen; layouts differ by firm)
 
-- **Litify (Salesforce):** search the WCB number, open the Matter, then its Hearing tab and the hearing for that
-  date. Lightning dropdowns are not ordinary selects: find each by its label and choose from the list it opens. The
-  hearing-note wizard can save as soon as you press "Next" on its last page: stop before that and hand it to the
-  attorney. Change an injury's status only when the note states that status for that body part.
+- **Litify (Salesforce):** the Matter (found by WCB number), its Hearing tab and the hearing for that date. Its
+  hearing-note wizard can save on the last "Next", so tell the attorney to check each page before pressing it. Change
+  an injury's status only when the note states that status for that body part.
 - **Clio:** Matter → Notes for the narrative; Calendar for the next hearing (linked to the matter); Tasks for to-dos.
 - **MyCase:** Case → Notes; Calendar → Event; Tasks.
 - **Filevine:** the project's Activity feed (or a Notes section) for the narrative; Tasks; deadlines in the
@@ -138,8 +137,8 @@ note. If that tool is not offered, ask the attorney to press **Mark posted** on 
 
 The attorney can set this up once as a scheduled task in Claude (the workspace's **How Claude posts it** button gives
 the exact instructions). When it runs: list the queued notes; if there are none, stop. For each, prepare the entry and
-the preview exactly as above. **If the attorney is not there to say yes, write nothing:** finish with a short message
-listing what is ready to post, and post it in their next conversation after they approve.
+the preview exactly as above, and **write nothing:** finish with a short message listing what is ready to post, and
+post it in their next conversation after they approve.
 
 Anything drafted with these tools is a draft: a licensed attorney reviews, edits and signs everything before it is
 filed or sent. This is general information, not legal advice, and using it does not create an attorney-client

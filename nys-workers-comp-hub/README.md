@@ -46,7 +46,8 @@ it does not create an attorney-client relationship.
 - **Your hearing notes** (Comp Desk Pro or Firm attorneys): the notes you format in your Pro Workspace and send with
   "Post Hearing Notes in Case Management OS via Claude" reach your own Claude, which posts them into your
   case-management system (Litify, Clio, MyCase, Filevine, Smokeball, CASEpeer, Needles, PracticePanther or another)
-  after showing you a preview, then marks them posted.
+  through that system's own connector in Claude, after showing you a preview, or prepares an entry you paste in
+  yourself; it never uses your sign-in to that system. Then it marks them posted.
 - **Eleven skills, all free:**
   - **hearing prep checklist (beta):** a sourced to-do list for each upcoming hearing, built from your own notes
     (see below)
