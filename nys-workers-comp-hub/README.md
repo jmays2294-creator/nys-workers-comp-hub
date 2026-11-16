@@ -73,7 +73,7 @@ it does not create an attorney-client relationship.
 ## Hearing prep checklist (beta)
 
 Say "prep my hearings for tomorrow" or "make a checklist for the Garcia hearing", or run
-`/nys-workers-comp-hub:hearing-prep tomorrow, ~/Hearings/this-week`, and point Claude at the folder with your
+`/nys-workers-comp-hub:hearing-prep tomorrow, Hearings/this-week`, and point Claude at the folder with your
 hearing notes, prior-hearing notes, the calendar or hearing notice, decisions, medical and IME reports and prep
 notes. Claude Code or Cowork reads those files on your own computer and writes, for each hearing, a draft
 checklist grouped into forms and filings, medical and IME, testimony and witnesses, deadlines, settlement and
@@ -131,7 +131,7 @@ your Pro Workspace", "Read the hearing notes you send to be posted", "Mark the h
 - The Pro Workspace tools send the cases you approve to your own Pro Workspace only. The workspace's import
   receipts are kept 48 hours.
 - The hearing-notes tools return only the notes you sent to be posted (never drafts), and only to your own
-  signed-in Claude; marking a note posted changes its status and nothing else. The notes stay in your Pro Workspace
+  Claude; marking a note posted changes its status and nothing else. The notes stay in your Pro Workspace
   account; the connector keeps no copy and logs no note text.
 - The skills run in Claude. Client material they work with stays in your own files, browser and email, and is
   never sent to The Comp Desk.
