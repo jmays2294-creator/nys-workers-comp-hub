@@ -1,6 +1,7 @@
 ---
 name: check-section-32-split
-description: Check the numbers in a proposed New York Section 32 settlement (waiver agreement) against The Comp Desk calculator: the gross amount, any Medicare set-aside, the 15% attorney fee rounded down to $5, a prior-counsel fee split and the claimant's net, and flag every figure that does not match, with the arithmetic laid out. Use when an attorney or paralegal says "check this Section 32 split", "does this C-32 add up", "verify the fee and net on this settlement", "how much does my client net on a $60,000 Section 32".
+description: >-
+  Check the numbers in a proposed New York Section 32 settlement (waiver agreement) against The Comp Desk calculator: the gross amount, any Medicare set-aside, the 15% attorney fee rounded down to $5, a prior-counsel fee split and the claimant's net, and flag every figure that does not match, with the arithmetic laid out. Use when an attorney or paralegal says "check this Section 32 split", "does this C-32 add up", "verify the fee and net on this settlement", "how much does my client net on a $60,000 Section 32".
 metadata:
   title: Check a Section 32 split
   kind: review

@@ -46,9 +46,9 @@ Ask once, if you do not already know: "Which case-management system should these
 ## Step 2: get the note
 
 - With the Hub connector connected: call `list_hearing_notes` (default: the **queued** ones, newest hearing first;
-  pass `from` / `to` for a day or a week). Show the attorney the list (case label, WCB number, hearing date, purpose,
+  set `from` and `to` for a day or a week). Show the attorney the list (case label, WCB number, hearing date, purpose,
   WCB status, the system they chose) and confirm which to post. Then call `get_hearing_note` with the `id` for each,
-  one at a time (it maps to the system the attorney chose unless you pass `target_system`).
+  one at a time (it maps to the system the attorney chose unless you set `target_system`).
 - If those tools are not offered, or the attorney prefers: ask them to open **Hearing notes** in their Pro Workspace,
   press **Copy for Claude** and paste it here. The block is the same record (`"schema": "tcd.hearing_note.v1"`)
   and the narrative note.

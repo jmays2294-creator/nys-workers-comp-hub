@@ -1,6 +1,7 @@
 ---
 name: find-wcb-authorized-doctor
-description: Help an injured worker in New York City, or their attorney, find a doctor for a work injury: search The Comp Desk's provider directory by borough or ZIP code, specialty, language and new patients, then confirm the provider is authorized by the NYS Workers' Compensation Board before booking. Use when someone asks "find me an orthopedist in Queens for my comp case", "a Spanish-speaking doctor near 11211 who takes workers' comp", "which doctor should I see for my back injury in Brooklyn".
+description: >-
+  Help an injured worker in New York City, or their attorney, find a doctor for a work injury: search The Comp Desk's provider directory by borough or ZIP code, specialty, language and new patients, then confirm the provider is authorized by the NYS Workers' Compensation Board before booking. Use when someone asks "find me an orthopedist in Queens for my comp case", "a Spanish-speaking doctor near 11211 who takes workers' comp", "which doctor should I see for my back injury in Brooklyn".
 metadata:
   title: Find a WCB-authorized doctor
   kind: workflow
