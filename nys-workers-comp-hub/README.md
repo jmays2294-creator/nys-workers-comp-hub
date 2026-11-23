@@ -121,6 +121,32 @@ Everything works without an account except the Pro Workspace and hearing-notes t
 Claude shows a **Connect** button: connect your Comp Desk account and approve what it asks for ("Add cases to
 your Pro Workspace", "Read the hearing notes you send to be posted", "Mark the hearing notes Claude posted for you").
 
+## The Comp Desk suite in Claude Code
+
+In Claude Code the plugin also brings The Comp Desk suite, a desk beside the chat for New York workers'
+compensation work:
+
+- **For your review**: the hearing checklists, letters and offer responses Claude drafted with the Hub's skills
+  in this session, and the unsent email drafts a mail connector made, until you mark them reviewed. Marking one
+  reviewed only tidies the list.
+- **Hearings**: each hearing in a checklist, with its open items and the items to verify.
+- **Hub figures**: every figure the Hub's calculators returned in this session, with the inputs it used, how it
+  was made and its citations, as the Hub returned them. The suite computes nothing itself.
+- **Next steps**: one press puts a request in the prompt; nothing runs until you press Enter.
+
+It also adds a card under each Hub calculator call, a quiet row above the prompt when something needs you, a
+status-line count, the commands `/comp-desk`, `/comp-desk-layout` and `/comp-desk-look`, an optional Paper look
+for the desktop and mobile apps, and right-click rows in the desktop app. Choose a layout (desk, focus, figures
+first, glance or quiet), density, sections, cards and look in the desk's Customize view or in `/config`.
+
+**You approve every send.** With the default setting, a tool call that sends something outside Claude, such as
+an email, a message, a post or a Pro Workspace send, waits for your own approval, even in auto mode. Where nobody
+can approve (a scheduled task), it does not run. In `/config` you can narrow this to the Hub's Pro Workspace
+sends, or widen it to record changes made by other connectors while you work with the Hub.
+
+The suite needs a version of Claude Code with mods turned on. If your organization turns them off, the Hub's
+tools, skills and commands work as before.
+
 ## Data and privacy
 
 - The connector at `https://ltibymvlytodkemdeeox.supabase.co/functions/v1/nys-workers-comp-hub/mcp` (run by
@@ -135,6 +161,9 @@ your Pro Workspace", "Read the hearing notes you send to be posted", "Mark the h
   account; the connector keeps no copy and logs no note text.
 - The skills run in Claude. Client material they work with stays in your own files, browser and email, and is
   never sent to The Comp Desk.
+- The Comp Desk suite in Claude Code shows this session only. It saves your layout and look choices on your
+  computer and nothing about your cases. It makes no network calls of its own and reads none of your files: it
+  shows what Claude's own tool calls returned.
 - Privacy Policy: https://thecompdesk.com/legal/privacy · Terms: https://thecompdesk.com/terms ·
   Support: contact@thecompdesk.com
 

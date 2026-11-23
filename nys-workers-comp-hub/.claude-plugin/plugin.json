@@ -1,8 +1,8 @@
 {
   "name": "nys-workers-comp-hub",
   "displayName": "New York State Workers' Compensation Hub",
-  "version": "1.2.6",
-  "description": "New York State workers' compensation in Claude: benefit calculators (AWW, weekly rates and the max/min by date of accident, SLU, LWEC, CCP awards, Section 32 splits, Burns liens, apportionment), formulas with citations, the glossary, plain-language explainers, WCB forms, case law from a verified library, a NYC doctor finder, eleven free workflow skills (including beta hearing prep and hearing-notes posting), sending cases to your Comp Desk Pro Workspace, and posting the hearing notes you format there into your case-management system.",
+  "version": "1.3.0",
+  "description": "New York State workers' compensation in Claude: benefit calculators (AWW, weekly rates and the max/min by date of accident, SLU, LWEC, CCP awards, Section 32 splits, Burns liens, apportionment), formulas with citations, the glossary, plain-language explainers, WCB forms, case law from a verified library, a NYC doctor finder, eleven free workflow skills (including beta hearing prep and hearing-notes posting), sending cases to your Comp Desk Pro Workspace, and posting the hearing notes you format there into your case-management system. In Claude Code it also adds The Comp Desk suite: a desk beside the chat with the drafts waiting for your review and every Hub figure with its inputs, laid out the way you choose.",
   "author": {
     "name": "The Comp Desk",
     "email": "contact@thecompdesk.com",
@@ -28,5 +28,99 @@
     "./commands/slu.md"
   ],
   "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "desk_layout": {
+      "type": "string",
+      "title": "Desk layout",
+      "description": "How the desk starts: desk shows everything, focus shows drafts and hearings, figures puts the Hub's figures first, glance shows the counts only, quiet turns off the row above the prompt, the status line and notices. The desk's Customize view can change it.",
+      "options": [
+        "desk",
+        "focus",
+        "figures",
+        "glance",
+        "quiet"
+      ],
+      "default": "desk"
+    },
+    "desk_density": {
+      "type": "string",
+      "title": "Desk density",
+      "description": "fit is compact when the desk is narrow and comfortable when it is wide. comfortable shows inputs and second lines. compact keeps each row to one or two lines.",
+      "options": [
+        "fit",
+        "comfortable",
+        "compact"
+      ],
+      "default": "fit"
+    },
+    "open_desk": {
+      "type": "string",
+      "title": "When the desk opens",
+      "description": "offer: the row above the prompt offers the desk the first time the Hub returns a figure in a session. on-hub-work: it opens by itself at the first Hub work in a session, where the screen is wide enough. on-start: it opens with every session, where the screen is wide enough. /comp-desk always opens it.",
+      "options": [
+        "offer",
+        "on-hub-work",
+        "on-start"
+      ],
+      "default": "offer"
+    },
+    "client_names": {
+      "type": "string",
+      "title": "Client names on the desk",
+      "description": "hide shows hearings and drafts by number, for screen sharing. Either way, names stay in this session and are never saved.",
+      "options": [
+        "show",
+        "hide"
+      ],
+      "default": "show"
+    },
+    "look": {
+      "type": "string",
+      "title": "Look in the desktop and mobile apps",
+      "description": "app keeps the app's own look. paper follows your light or dark setting; paper-light and paper-night fix one. The terminal and VS Code keep their own colors.",
+      "options": [
+        "app",
+        "paper",
+        "paper-light",
+        "paper-night"
+      ],
+      "default": "app"
+    },
+    "motion": {
+      "type": "string",
+      "title": "Motion",
+      "description": "subtle shows a soft dot while the Hub calculates, in the desktop app, VS Code and the mobile app. off shows none. Reduce Motion always keeps it still.",
+      "options": [
+        "subtle",
+        "off"
+      ],
+      "default": "subtle"
+    },
+    "send_guard": {
+      "type": "string",
+      "title": "Ask before anything is sent",
+      "description": "sends: a tool call that sends something outside Claude (an email, a message, a post, the Hub's Pro Workspace writes) waits for your own approval, even in auto mode. sends-and-writes: also asks before a connector creates or changes a record once you work with the Hub. hub-only: asks only before the Hub's Pro Workspace writes.",
+      "options": [
+        "sends",
+        "sends-and-writes",
+        "hub-only"
+      ],
+      "default": "sends"
+    },
+    "working_conventions": {
+      "type": "boolean",
+      "title": "Hub working conventions for Claude",
+      "description": "Adds a short section to Claude's instructions: Hub figures with their inputs, drafts for your review, nothing sent without your yes. It applies only to New York workers' compensation work.",
+      "default": true
+    },
+    "menu_rows": {
+      "type": "boolean",
+      "title": "Right-click rows (desktop app)",
+      "description": "Rows in the desktop app's right-click menu: look up a selected term, date or WCB form with the Hub, or copy a figure with its inputs.",
+      "default": true
+    }
+  },
   "privacyPolicyUrl": "https://thecompdesk.com/legal/privacy"
 }
