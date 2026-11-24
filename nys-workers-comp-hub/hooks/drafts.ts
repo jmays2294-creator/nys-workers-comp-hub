@@ -1,6 +1,7 @@
 // Which files and email drafts land on the desk, and the numbers the desk, band and status line show.
 // Pure: no $.
 import type { Draft, Figure } from '../types'
+import { clean } from './clean'
 
 // The runtime twin of register.tsx's DOC_PATH matcher (that one stays matcher-only).
 const DOC_FILE = /\.(?:md|markdown|txt|docx|doc|rtf|odt|html|htm|eml)$/i
@@ -15,9 +16,10 @@ export const DRAFTING_SKILLS: ReadonlySet<string> = new Set([
 
 export const MAX_PARSE = 400_000
 
+/** The file name of a path, safe to draw (the path itself is kept as written, for Copy path). */
 export function baseName(p: string): string {
   const i = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'))
-  return i < 0 ? p : p.slice(i + 1)
+  return clean(i < 0 ? p : p.slice(i + 1))
 }
 
 export function extOf(p: string): string {

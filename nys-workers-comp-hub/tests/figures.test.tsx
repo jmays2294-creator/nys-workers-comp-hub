@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 import type { Figure, HubLink } from '../types'
 import { COPY } from '../hooks/copy'
 import { inputPairs } from '../hooks/hub'
-import { engine, PANE, PEEK, peek, START, SURFACES } from './engine'
+import { describeTool, engine, PANE, PEEK, peek, START, SURFACES } from './engine'
 import { CONNECTOR, PLUGIN, RATE_LIMITED, RATE_MISSING, reply, SLU_INVALID, SLU_OK, WEEKS_OK } from './fixtures'
 
 const SLU_ARGS = { aww: 1200, date_of_accident: '2024-03-15', body_parts: [{ body_part: 'arm', loss_percent: 25 }], prior_payments: 0 }
@@ -26,8 +26,9 @@ test('7. an SLU call through the plugin records one done figure with the Hub dis
   expect(f?.notice.figures).toBe((SLU_OK.notice as Record<string, string>).figures)
 })
 
-test('8. the same call through a claude.ai connector records the same figure', { plugins: [PEEK] }, async ($, on) => {
+test('8. the same call through a claude.ai connector at the Hub\'s address records the same figure', { plugins: [PEEK] }, async ($, on) => {
   engine(on, { results: { calculate_slu_award: reply(SLU_OK) } })
+  await describeTool($, `${CONNECTOR}calculate_slu_award`)
   await $.tool.call({ tool: `${CONNECTOR}calculate_slu_award`, tool_use_id: 't-c', ...SLU_ARGS })
   const f = (await peek<Figure[]>($, 'figures'))[0]
   expect(f?.status).toBe('done')

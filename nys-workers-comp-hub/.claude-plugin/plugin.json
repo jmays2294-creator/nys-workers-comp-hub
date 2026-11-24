@@ -31,34 +31,10 @@
   "hooks": "./hooks/hooks.json",
   "types": "./types/index.d.ts",
   "userConfig": {
-    "desk_layout": {
-      "type": "string",
-      "title": "Desk layout",
-      "description": "How the desk starts: desk shows everything, focus shows drafts and hearings, figures puts the Hub's figures first, glance shows the counts only, quiet turns off the row above the prompt, the status line and notices. The desk's Customize view can change it.",
-      "options": [
-        "desk",
-        "focus",
-        "figures",
-        "glance",
-        "quiet"
-      ],
-      "default": "desk"
-    },
-    "desk_density": {
-      "type": "string",
-      "title": "Desk density",
-      "description": "fit is compact when the desk is narrow and comfortable when it is wide. comfortable shows inputs and second lines. compact keeps each row to one or two lines.",
-      "options": [
-        "fit",
-        "comfortable",
-        "compact"
-      ],
-      "default": "fit"
-    },
     "open_desk": {
       "type": "string",
       "title": "When the desk opens",
-      "description": "offer: the row above the prompt offers the desk the first time the Hub returns a figure in a session. on-hub-work: it opens by itself at the first Hub work in a session, where the screen is wide enough. on-start: it opens with every session, where the screen is wide enough. /comp-desk always opens it.",
+      "description": "offer: the row above the prompt offers the desk the first time the Hub returns a figure in a session. on-hub-work: it opens by itself at the first Hub work in a session, where the screen is wide enough. on-start: it opens once at the start of each session, where the screen is wide enough. /comp-desk always opens it. Layout, density, client names, look and motion are set in the desk's Customize view.",
       "options": [
         "offer",
         "on-hub-work",
@@ -66,42 +42,10 @@
       ],
       "default": "offer"
     },
-    "client_names": {
-      "type": "string",
-      "title": "Client names on the desk",
-      "description": "hide shows hearings and drafts by number, for screen sharing. Either way, names stay in this session and are never saved.",
-      "options": [
-        "show",
-        "hide"
-      ],
-      "default": "show"
-    },
-    "look": {
-      "type": "string",
-      "title": "Look in the desktop and mobile apps",
-      "description": "app keeps the app's own look. paper follows your light or dark setting; paper-light and paper-night fix one. The terminal and VS Code keep their own colors.",
-      "options": [
-        "app",
-        "paper",
-        "paper-light",
-        "paper-night"
-      ],
-      "default": "app"
-    },
-    "motion": {
-      "type": "string",
-      "title": "Motion",
-      "description": "subtle shows a soft dot while the Hub calculates, in the desktop app, VS Code and the mobile app. off shows none. Reduce Motion always keeps it still.",
-      "options": [
-        "subtle",
-        "off"
-      ],
-      "default": "subtle"
-    },
     "send_guard": {
       "type": "string",
       "title": "Ask before anything is sent",
-      "description": "sends: a tool call that sends something outside Claude (an email, a message, a post, the Hub's Pro Workspace writes) waits for your own approval, even in auto mode. sends-and-writes: also asks before a connector creates or changes a record once you work with the Hub. hub-only: asks only before the Hub's Pro Workspace writes.",
+      "description": "sends: a connector tool call whose name says it sends something outside Claude (an email, a message, a post, a comment, a push or a deploy), and the Hub's Pro Workspace writes, wait for your own approval, even in auto mode. This applies in every Claude Code session on this computer, not only Hub work; where nobody can approve (a scheduled task or a background agent) the call is refused. It reads tool names, so a shell command, a browser click or a general-purpose connector tool is not covered: Claude Code's own permission prompts apply there. sends-and-writes: also asks before a connector creates or changes a record once you work with the Hub. hub-only: asks only before the Hub's Pro Workspace writes.",
       "options": [
         "sends",
         "sends-and-writes",

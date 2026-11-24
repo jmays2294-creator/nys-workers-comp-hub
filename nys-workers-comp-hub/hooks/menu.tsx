@@ -8,8 +8,11 @@ import { copyText } from './hub'
 
 const figures = atom({ plugin: 'nys-workers-comp-hub', key: 'figures' } as const, [], { shape: 'figures-1' })
 
-const FORM = /\b(?:C|OC|RB|PH|EC|HP|DB|SH|IME|MG|VF)-?\d{1,4}(?:\.\d{1,2})?\b/i
+// A WCB form only when it is the whole selection (EC2 or DB2 inside code is not a form question).
+const FORM = /^(?:C|OC|RB|PH|EC|HP|DB|SH|IME|MG|VF)-?\d{1,4}(?:\.\d{1,2})?$/i
 const DATE = /\b(\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})\b/
+// A claimant label as attorneys write it (A. Garcia, A Garcia): never sent to the Hub's glossary.
+const NAME_LABEL = /^[A-Z]\.?\s?[A-Z][a-z]+/
 
 /** The menu's rows (at most three), or null for none. */
 export async function drawMenu($: EngineInterface, e: RenderInput<'ContextMenu'>, options: PluginOptions): Promise<RenderElement | null> {
@@ -27,9 +30,11 @@ export async function drawMenu($: EngineInterface, e: RenderInput<'ContextMenu'>
   if (sel.length >= 1 && sel.length <= 80 && !/[\r\n]/.test(sel)) {
     const form = FORM.exec(sel)?.[0]
     const date = DATE.exec(sel)?.[1]
+    const words = sel.split(/\s+/).length
+    const isTerm = words <= 4 && !NAME_LABEL.test(sel)
     if (form !== undefined) rows.push(<Button key="menu-form" onPress={() => insertPrompt($, COPY.fillForm(form))}>{COPY.menuForm(form)} <Text dimColor>{COPY.menuFillSub}</Text></Button>)
     if (date !== undefined) rows.push(<Button key="menu-rate" onPress={() => insertPrompt($, `/nys-workers-comp-hub:max-rate ${date}`)}>{COPY.menuRate(date)} <Text dimColor>{COPY.menuFillSub}</Text></Button>)
-    rows.push(<Button key="menu-define" onPress={() => insertPrompt($, COPY.fillDefine(sel))}>{COPY.menuDefine} <Text dimColor>{COPY.menuFillSub}</Text></Button>)
+    if (isTerm) rows.push(<Button key="menu-define" onPress={() => insertPrompt($, COPY.fillDefine(sel))}>{COPY.menuDefine} <Text dimColor>{COPY.menuFillSub}</Text></Button>)
   }
   if (rows.length === 0) return null
   return <Box flexDirection="column">{rows.slice(0, 3)}</Box>

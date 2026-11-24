@@ -3,6 +3,7 @@
 import { mock } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
 import type { On, RenderElement, UiOpenResult } from 'claude-code'
+import { HUB_ORIGIN } from '../hooks/hub'
 import type { Reply } from './fixtures'
 
 export type Result = Reply | { result: unknown; text?: string; isError?: true }
@@ -75,12 +76,18 @@ export function engine(on: On, opts: EngineOptions = {}): Log {
   })
   on('theme.clear', () => { log.clears += 1; return { value: { isDrawn: false, reason: 'cleared' } } })
   on('ui.log', () => ({ value: undefined }))
+  // The engine's record of this plugin's panes: open, placed or waiting, until closed.
+  const panes = new Map<string, boolean>()
   on('ui.open', (_, e) => {
     log.opened.push(e.id)
     log.focused.push(e.focus === true)
-    return { value: opts.uiOpen ?? { isPlaced: true } }
+    const opened = opts.uiOpen ?? { isPlaced: true as const }
+    panes.set(e.id, opened.isPlaced)
+    return { value: opened }
   })
-  on('ui.close', (_, e) => { log.closed.push(e.id); return { value: undefined } })
+  on('ui.close', (_, e) => { log.closed.push(e.id); panes.delete(e.id); return { value: undefined } })
+  on('ui.panes', () => ({ value: [...panes].map(([id, isPlaced]) => ({ id, title: id, isShown: isPlaced, isFocused: false, isPlaced })) }))
+  on('tool.describe', (_, e) => ({ description: e.description }))
   on('ui.status', (_, e) => { log.statuses.push(e.text); return { value: undefined } })
   on('ui.toast', (_, e) => { log.toasts.push(e.text); return { value: undefined } })
   on('ui.copy', (_, e) => { log.copies.push(e.text); return { value: { isCopied: true } } })
@@ -128,6 +135,11 @@ export async function peek<T = unknown>($: Engine, key: string): Promise<T> {
 }
 
 export const HUB = 'nys-workers-comp-hub'
+
+/** The engine describing a connector's tool as served from the Hub's own address (or another, with `origin`). */
+export async function describeTool($: Engine, tool: string, origin: string = HUB_ORIGIN): Promise<void> {
+  await $.tool.describe({ tool, description: 'x', provider: { plugin: 'mcp:connector', tier: 'user' }, mcpServer: { type: 'claudeai-proxy', origin } })
+}
 
 /** A tool row's props, as the engine hands them to a ToolUse hook. */
 export function toolRow(tool: string, id: string, input: unknown, extra: Record<string, unknown> = {}) {

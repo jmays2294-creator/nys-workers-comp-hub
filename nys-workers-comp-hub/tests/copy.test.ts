@@ -1,23 +1,23 @@
 import { expect, test } from 'claude-code/testing'
 import type { ChecklistCounts, Prefs } from '../types'
 import { COPY, DISPLAY_LABELS, INPUT_LABELS, SKILL_LABELS, TITLES } from '../hooks/copy'
-import { prefsFrom } from '../hooks/prefs'
+import { DEFAULT_PREFS } from '../hooks/prefs'
 
 const COUNTS: ChecklistCounts = { dateLine: 'Thursday, December 3, 2026', hearings: [], hearingCount: 2, open: 21, done: 1, verify: 8, conflicts: 1, notFound: 6, odd: 1, signed: 'no' }
-const P: Prefs = { ...prefsFrom({}), sections: { review: true, hearings: false, figures: true, connection: false, next: true } }
+const P: Prefs = { ...DEFAULT_PREFS, sections: { review: true, hearings: false, figures: true, connection: false, next: true } }
 const PAIRS = [{ label: 'AWW', value: '1200' }, { label: 'Date of accident', value: '2024-03-15' }]
 
 // One sample call for every function in COPY; the test fails if a new function is added without one.
 const SAMPLES: Record<string, () => unknown> = {
   headline: () => [COPY.headline(0, 0, 0, 0), COPY.headline(0, 0, 1, 0), COPY.headline(1, 8, 1, 2), COPY.headline(2, 0, 0, 1), COPY.headline(0, 1, 0, 1)],
-  gOldest: () => COPY.gOldest('4 min ago'), gInLists: () => [COPY.gInLists(1), COPY.gInLists(2)], gNewest: () => COPY.gNewest('just now'), gFirst: () => COPY.gFirst('12/03/2026 9:30 AM'),
+  gOldest: () => COPY.gOldest('4 min ago'), gToday: () => COPY.gToday('12/03/2026 9:30 AM'), todayLine: () => COPY.todayLine('Thursday, December 3, 2026'), gInLists: () => [COPY.gInLists(1), COPY.gInLists(2)], gNewest: () => COPY.gNewest('just now'), gFirst: () => COPY.gFirst('12/03/2026 9:30 AM'),
   glanceLine: () => [COPY.glanceLine(1, 8, 0, 2), COPY.glanceLine(0, 0, 1, 1)], more: () => COPY.more(6, 9),
   minutesAgo: () => COPY.minutesAgo(4), hoursAgo: () => [COPY.hoursAgo(1), COPY.hoursAgo(3)], daysAgo: () => [COPY.daysAgo(1), COPY.daysAgo(2)],
   maskedDraft: () => [COPY.maskedDraft(1, 'md'), COPY.maskedDraft(2, '')], maskedEmail: () => COPY.maskedEmail(1),
   checklistLine: () => [COPY.checklistLine(COUNTS), COPY.checklistLine({ ...COUNTS, signed: 'yes', conflicts: 0, notFound: 0 })],
   originWrite: () => COPY.originWrite('just now'), originEdit: () => COPY.originEdit('just now'), originRead: () => COPY.originRead('just now'), originConnector: () => COPY.originConnector('just now'),
   withSkill: () => COPY.withSkill('Settlement and offer responses'), reviewedLine: () => COPY.reviewedLine('just now'), moreReviewed: () => [COPY.moreReviewed(1), COPY.moreReviewed(3)],
-  notesReady: () => [COPY.notesReady(1), COPY.notesReady(2)], importsReview: () => [COPY.importsReview(1), COPY.importsReview(2)],
+  notesLine: () => [COPY.notesLine(3, 1), COPY.notesLine(1, 0), COPY.notesLine(0, 2)], importsReview: () => [COPY.importsReview(1), COPY.importsReview(2)],
   reviewEmpty: () => [COPY.reviewEmpty('sends'), COPY.reviewEmpty('hub-only')],
   hearingMasked: () => COPY.hearingMasked(1), hearingCounts: () => [COPY.hearingCounts(0, 0, 3), COPY.hearingCounts(10, 5, 1)], hearingsFrom: () => COPY.hearingsFrom('hearing-checklist-2026-12-03.md'),
   inputsLine: () => COPY.inputsLine(PAIRS), missingLine: () => COPY.missingLine(['AWW']), problemsLine: () => COPY.problemsLine(['Date of accident']),
@@ -38,9 +38,9 @@ const SAMPLES: Record<string, () => unknown> = {
   bandNeeds: () => [COPY.bandNeeds(1, 8), COPY.bandNeeds(2, 0)], bandNeedsShort: () => COPY.bandNeedsShort(1, 8),
   status: () => [COPY.status(0, 0, 0), COPY.status(0, 0, 1), COPY.status(0, 0, 2), COPY.status(1, 8, 1)],
   toastChecklist: () => COPY.toastChecklist(21, 8), toastSent: () => [COPY.toastSent(2, 0), COPY.toastSent(2, 1)],
-  layoutList: () => COPY.layoutList(P), layoutDone: () => [COPY.layoutDone(P), COPY.layoutDone(prefsFrom({}))], lookList: () => COPY.lookList(P),
+  layoutList: () => COPY.layoutList(P), layoutDone: () => [COPY.layoutDone(P), COPY.layoutDone(DEFAULT_PREFS)], lookList: () => COPY.lookList(P),
   lookSet: () => (['app', 'paper', 'paper-light', 'paper-night'] as const).map(x => COPY.lookSet(x)),
-  guardSend: () => COPY.guardSend('send_message'), guardWrite: () => COPY.guardWrite('create_record'),
+  guardSend: () => COPY.guardSend('send_message'), guardWrite: () => COPY.guardWrite('create_record'), guardStraightOut: () => COPY.guardStraightOut('send_message'),
   menuForm: () => COPY.menuForm('C-4.3'), menuRate: () => COPY.menuRate('03/15/2024'),
 }
 

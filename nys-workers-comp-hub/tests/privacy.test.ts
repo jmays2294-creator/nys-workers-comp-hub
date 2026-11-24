@@ -1,12 +1,12 @@
 import { expect, test } from 'claude-code/testing'
-import { prefsFrom } from '../hooks/prefs'
+import { DEFAULT_PREFS } from '../hooks/prefs'
 import { BAND, engine, HUB, PANE, RUN, skillArgs, START } from './engine'
 import type { ResultFor } from './engine'
 import { CHECKLIST, CHECKLIST_FILE, LETTER, LETTER_FILE, NOTE_ID, NOTE_ONE, NOTE_POSTED, NOTES_LIST, PLUGIN, RATE_MISSING, reply, SLU_INVALID, SLU_OK, WS_SENT, WS_STATUS } from './fixtures'
 
 const CASE_DATA = /Garcia|Baptiste|DEMO-|hearing-checklist|\/x\/|\$\d|Arm|aww|subject/i
 const ON_SCREEN = /Garcia|Baptiste|DEMO-0001|\.md|Hearing reminder/
-const PREF_KEYS = Object.keys(prefsFrom({})).sort()
+const PREF_KEYS = Object.keys(DEFAULT_PREFS).sort()
 const CUSTOMIZE = [
   'p-focus', 'p-figures', 'p-glance', 'p-quiet', 'p-desk', 'd-comfortable', 'd-compact', 'd-fit',
   's-review', 's-review', 's-hearings', 's-hearings', 's-figures', 's-figures', 's-connection', 's-connection', 's-next', 's-next',

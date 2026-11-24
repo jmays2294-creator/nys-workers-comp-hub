@@ -137,15 +137,22 @@ compensation work:
 It also adds a card under each Hub calculator call, a quiet row above the prompt when something needs you, a
 status-line count, the commands `/comp-desk`, `/comp-desk-layout` and `/comp-desk-look`, an optional Paper look
 for the desktop and mobile apps, and right-click rows in the desktop app. Choose a layout (desk, focus, figures
-first, glance or quiet), density, sections, cards and look in the desk's Customize view or in `/config`.
+first, glance or quiet), density, sections, cards, client names, look and motion in the desk's Customize view or
+with `/comp-desk-layout` and `/comp-desk-look`. `/config` holds the rest: when the desk opens, the send guard,
+the working conventions and the right-click rows.
 
-**You approve every send.** With the default setting, a tool call that sends something outside Claude, such as
-an email, a message, a post or a Pro Workspace send, waits for your own approval, even in auto mode. Where nobody
-can approve (a scheduled task), it does not run. In `/config` you can narrow this to the Hub's Pro Workspace
-sends, or widen it to record changes made by other connectors while you work with the Hub.
+**You approve the sends the suite recognizes.** With the default setting, a connector tool call whose name says
+it sends something outside Claude (it sends, replies, forwards, posts, publishes, shares, submits, invites,
+notifies, comments, pushes or deploys), and the Hub's Pro Workspace writes, wait for your own approval, even in
+auto mode. This applies in every Claude Code session on this computer, not only Hub work. Where nobody can
+approve (a scheduled task or a background agent), the call does not run. The suite reads tool names: it cannot
+see a send inside a shell command, a browser click or a general-purpose connector tool, so keep Claude Code's own
+permission prompts on for those. In `/config` you can narrow this to the Hub's Pro Workspace sends, or widen it
+to record changes made by other connectors while you work with the Hub.
 
 The suite needs a version of Claude Code with mods turned on. If your organization turns them off, the Hub's
-tools, skills and commands work as before.
+tools, skills and commands work as before, and the desk and the send guard are not there; Claude Code's own
+permission prompts apply.
 
 ## Data and privacy
 

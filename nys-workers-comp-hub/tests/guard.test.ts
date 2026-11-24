@@ -8,6 +8,8 @@ const ASK = [
   'mcp__claude_ai_Gmail__send_message', 'mcp__claude_ai_Gmail__send_draft', 'mcp__x__reply', 'mcp__x__forward', 'mcp__slack__slack_send_message',
   'mcp__x__sendMessage', 'mcp__x__postMessage', 'mcp__x__createPost',
   'mcp__drive__share_file', 'mcp__x__publish_project', 'mcp__x__reply_to_thread', 'mcp__x__submit_pending',
+  // kebab-case, a read verb followed by a send, one word
+  'mcp__resend__send-email', 'mcp__x__post-message', 'mcp__x__export_and_send', 'mcp__x__sendmail',
 ]
 const KEEP = [
   'mcp__claude_ai_Gmail__create_draft', 'mcp__claude_ai_Gmail__update_draft', 'mcp__x__list_drafts',

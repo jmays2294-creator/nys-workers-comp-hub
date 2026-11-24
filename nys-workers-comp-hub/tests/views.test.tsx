@@ -39,7 +39,7 @@ for (const isFull of [false, true]) {
         if (isFull) {
           expect(await ui.find({ type: 'Text', text: COPY.headline(0, 0, 0, 0) })).toBeUndefined()
           if (bodyColumns >= 36) {
-            expect(await ui.find({ type: 'Text', text: COPY.notesReady(1) })).toBeDefined()
+            expect(await ui.find({ type: 'Text', text: COPY.notesLine(3, 1) })).toBeDefined()
             expect(await ui.find({ type: 'Text', text: COPY.importsReview(1) })).toBeDefined()
           }
         }

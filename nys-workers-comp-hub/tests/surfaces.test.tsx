@@ -6,6 +6,7 @@ import { expect, test } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
 import type { RenderViewport } from 'claude-code'
 import { COPY } from '../hooks/copy'
+import { DEFAULT_PREFS } from '../hooks/prefs'
 import { BAND, borderOf, engine, HUB, PANE, skillArgs, SURFACES, toolRow } from './engine'
 import { CHECKLIST, PLUGIN, RATE_MISSING, reply, SLU_OK } from './fixtures'
 
@@ -56,8 +57,8 @@ function results() {
 
 for (const isFull of [false, true]) {
   for (const density of ['fit', 'comfortable', 'compact'] as const) {
-    test(`S1. the desk, ${isFull ? 'full, long strings' : 'empty'}, ${density}: every surface, width, seat and viewport`, { options: { desk_density: density } }, async ($, on) => {
-      engine(on, { results: results() })
+    test(`S1. the desk, ${isFull ? 'full, long strings' : 'empty'}, ${density}: every surface, width, seat and viewport`, async ($, on) => {
+      engine(on, { results: results(), store: { prefs: { ...DEFAULT_PREFS, density } } })
       if (isFull) await fill($)
       for (const surface of SURFACES) {
         for (const bodyColumns of WIDTHS) {
@@ -169,10 +170,11 @@ for (const cards of ['full', 'compact'] as const) {
 test('S5. the right-click rows with an 80-character selection and a Hub figure row', async ($, on) => {
   engine(on, { results: results() })
   await fill($)
-  const selection = 'C-4.3 ' + 'x'.repeat(74)
-  const ui = await $.ui.mount({ plugin: HUB, surface: 'desktop', component: 'ContextMenu', props: { row: { component: 'ToolUse', requestId: 't1' }, selection: { text: selection } } })
-  const buttons = await ui.findAll({ type: 'Button' })
-  expect(buttons.length).toBeLessThanOrEqual(3)
-  expect(buttons.map(b => b.key)).toEqual(['menu-copy', 'menu-ask', 'menu-form'])
-  await ui.unmount()
+  for (const [selection, keys] of [['x'.repeat(80), ['menu-copy', 'menu-ask', 'menu-define']], ['C-4.3', ['menu-copy', 'menu-ask', 'menu-form']]] as const) {
+    const ui = await $.ui.mount({ plugin: HUB, surface: 'desktop', component: 'ContextMenu', props: { row: { component: 'ToolUse', requestId: 't1' }, selection: { text: selection } } })
+    const buttons = await ui.findAll({ type: 'Button' })
+    expect(buttons.length).toBeLessThanOrEqual(3)
+    expect(buttons.map(b => b.key)).toEqual([...keys])
+    await ui.unmount()
+  }
 })

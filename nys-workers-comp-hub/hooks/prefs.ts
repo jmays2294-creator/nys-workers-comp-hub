@@ -1,11 +1,11 @@
 // Layout and look choices: the only thing the suite keeps across sessions ($.store 'prefs').
-// Pure: no $, no case data.
-import type { PluginOptions } from 'claude-code'
+// Pure: no $, no case data. Their one home is the desk's Customize view and the /comp-desk-layout and
+// /comp-desk-look commands; /config holds only what must be known before the desk draws.
 import type { Look, Preset, Prefs, Sections } from '../types'
 
 type Bundled = Pick<Prefs, 'order' | 'sections' | 'band' | 'status' | 'notices' | 'cards'>
 export type PresetName = Exclude<Preset, 'custom'>
-export type PrefsChange = Partial<Omit<Prefs, 'v' | 'stamp' | 'preset' | 'sections'>> & { sections?: Partial<Sections> }
+export type PrefsChange = Partial<Omit<Prefs, 'v' | 'preset' | 'sections'>> & { sections?: Partial<Sections> }
 
 export const PRESET_NAMES: readonly PresetName[] = ['desk', 'focus', 'figures', 'glance', 'quiet']
 export const DENSITIES: readonly Prefs['density'][] = ['fit', 'comfortable', 'compact']
@@ -28,37 +28,17 @@ export function opt<T extends string>(v: unknown, allowed: readonly T[], d: T): 
   return typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : d
 }
 
-export function stampOf(options: PluginOptions): string {
-  return JSON.stringify([
-    opt(options.desk_layout, PRESET_NAMES, 'desk'),
-    opt(options.desk_density, DENSITIES, 'fit'),
-    opt(options.client_names, NAMES, 'show'),
-    opt(options.look, LOOKS, 'app'),
-    opt(options.motion, MOTIONS, 'subtle'),
-  ])
-}
-
 function bundledOf(name: PresetName): Bundled {
   const b = PRESETS[name]
   return { order: b.order, sections: { ...b.sections }, band: b.band, status: b.status, notices: b.notices, cards: b.cards }
 }
 
-export function prefsFrom(options: PluginOptions): Prefs {
-  const preset = opt(options.desk_layout, PRESET_NAMES, 'desk')
-  return {
-    v: 1,
-    stamp: stampOf(options),
-    preset,
-    ...bundledOf(preset),
-    density: opt(options.desk_density, DENSITIES, 'fit'),
-    names: opt(options.client_names, NAMES, 'show'),
-    look: opt(options.look, LOOKS, 'app'),
-    serif: true,
-    motion: opt(options.motion, MOTIONS, 'subtle'),
-  }
+/** The desk's starting choices: the Desk layout, fit to width, names shown, the app's own look. */
+export function freshPrefs(): Prefs {
+  return { v: 1, preset: 'desk', ...bundledOf('desk'), density: 'fit', names: 'show', look: 'app', serif: true, motion: 'subtle' }
 }
 
-export const DEFAULT_PREFS: Prefs = prefsFrom({})
+export const DEFAULT_PREFS: Prefs = freshPrefs()
 
 const SECTION_KEYS = ['review', 'hearings', 'figures', 'connection', 'next'] as const
 const PRESETS_ALL: readonly Preset[] = [...PRESET_NAMES, 'custom']
@@ -67,7 +47,7 @@ const PRESETS_ALL: readonly Preset[] = [...PRESET_NAMES, 'custom']
 export function cleanStoredPrefs(raw: unknown): Prefs | null {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null
   const r = raw as Record<string, unknown>
-  if (r.v !== 1 || typeof r.stamp !== 'string') return null
+  if (r.v !== 1) return null
   const sec = r.sections
   if (typeof sec !== 'object' || sec === null) return null
   const sr = sec as Record<string, unknown>
@@ -77,7 +57,7 @@ export function cleanStoredPrefs(raw: unknown): Prefs | null {
     || !isIn(r.density, DENSITIES) || !isIn(r.names, NAMES) || !isIn(r.look, LOOKS) || !isIn(r.motion, MOTIONS)) return null
   if (typeof r.band !== 'boolean' || typeof r.status !== 'boolean' || typeof r.notices !== 'boolean' || typeof r.serif !== 'boolean') return null
   return {
-    v: 1, stamp: r.stamp, preset: r.preset, order: r.order,
+    v: 1, preset: r.preset, order: r.order,
     sections: { review: sr.review as boolean, hearings: sr.hearings as boolean, figures: sr.figures as boolean, connection: sr.connection as boolean, next: sr.next as boolean },
     band: r.band, status: r.status, notices: r.notices, cards: r.cards, density: r.density, names: r.names, look: r.look, serif: r.serif, motion: r.motion,
   }

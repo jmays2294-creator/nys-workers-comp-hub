@@ -2,19 +2,20 @@
 // session's $.state and the person's layout choices; every figure on it is a Hub display string.
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, PluginOptions, RenderElement, RenderInput, UiPressArgument } from 'claude-code'
-import type { Draft, Figure, PaneView, Prefs, SectionName } from '../types'
-import { applyLook, clearDesk, copyOut, fillPrompt, PANE_ID, recheckTools, savePrefs, say, syncStatus } from './actions'
-import { COPY, SECTION_ORDER } from './copy'
+import type { Draft, Figure, HearingRow, PaneView, Prefs, SectionName } from '../types'
+import { applyLook, clearDesk, closeDesk, copyOut, fillPrompt, recheckTools, resetPrefs, savePrefs, say, syncStatus } from './actions'
+import { hearingOrder, localDay } from './checklist'
+import { COPY, SECTION_ORDER, SKILL_LABELS } from './copy'
 import { deskNumbers, extOf, latestChecklists } from './drafts'
 import { ageOf, copyText, headlineText } from './hub'
-import { applyPreset, DEFAULT_PREFS, GUARDS, opt, prefsFrom, toggle } from './prefs'
+import { applyPreset, DEFAULT_PREFS, GUARDS, opt, toggle } from './prefs'
 import type { PrefsChange, PresetName } from './prefs'
 
 const figures = atom({ plugin: 'nys-workers-comp-hub', key: 'figures' } as const, [], { shape: 'figures-1' })
 const drafts = atom({ plugin: 'nys-workers-comp-hub', key: 'drafts' } as const, [], { shape: 'drafts-1' })
 const link = atom({ plugin: 'nys-workers-comp-hub', key: 'link' } as const, { tools: null, checkedAt: null, lastAnswerAt: null, problem: null, workspace: 'unknown', workspaceAt: null, sent: null, imports: null, notesWaiting: null, notesReady: [] }, { shape: 'link-1' })
 const work = atom({ plugin: 'nys-workers-comp-hub', key: 'work' } as const, { isHubWork: false, skill: null, isDraftingSkill: false, didAutoOpen: false, didOpenDesk: false, didDeclineOffer: false, isLookApplied: false, writes: 0 }, { shape: 'work-1' })
-const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-1' })
+const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-2' })
 const view = atom({ plugin: 'nys-workers-comp-hub', key: 'view' } as const, { name: 'desk', figureId: null, copiedId: null, isAllFigures: false, clearArmed: false }, { shape: 'view-1' })
 const tick = atom({ plugin: 'nys-workers-comp-hub', key: 'tick' } as const, 0)
 
@@ -33,10 +34,16 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
   const lk = await read($, link)
   const p = await read($, prefs)
   const v = await read($, view)
+  const w = await read($, work)
   await read($, tick)
   const now = await $.clock.now()
   const n = deskNumbers(drs, figs)
-  const latest = latestChecklists(drs)
+  // Today's checklist first; each checklist's hearings in time order where every time can be read.
+  const today = localDay(now)
+  const listed = latestChecklists(drs)
+  const latest = [...listed.filter(d => d.base === today), ...listed.filter(d => d.base !== today)]
+  const hearingsOf = (d: Draft): readonly HearingRow[] => hearingOrder(d.checklist?.hearings ?? [])
+  const usesWorkspace = lk.workspace !== 'unknown' || lk.sent !== null || lk.imports !== null || w.skill === SKILL_LABELS['prep-to-workspace']
 
   if (e.props.placement === 'widget') return <Text>{COPY.glanceLine(n.review, n.verify, n.figuresDone, n.hearings)}</Text>
 
@@ -90,6 +97,7 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
   const order: readonly SectionName[] = p.order === 'figures-first' ? ['figures', 'review', 'hearings', 'connection', 'next'] : SECTION_ORDER
   const visible = order.filter(x => p.sections[x])
 
+  // Glance shows the four counts by design; only a custom layout with every section hidden says so.
   return (
     <Box flexDirection="column" gap={isComfy ? 1 : 0}>
       <Box flexDirection="column">
@@ -100,16 +108,15 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
       </Box>
       {isNarrow ? <Text>{COPY.glanceLine(n.review, n.verify, n.figuresDone, n.hearings)}</Text> : glance()}
       {visible.length === 0
-        ? <Box flexDirection="column"><Text dimColor>{COPY.sectionsOff}</Text><Button key="customize" label={COPY.customize} onPress={() => setView({ name: 'customize', clearArmed: false })} /></Box>
+        ? (p.preset === 'glance' ? null : <Text dimColor>{COPY.sectionsOff}</Text>)
         : visible.map(x => section(x))}
       <Box flexDirection="column">
         <Text dimColor size="caption">{COPY.disclaimer}</Text>
         {isComfy ? <Text dimColor size="caption">{COPY.draftedByAgent}</Text> : null}
-        {isComfy ? <Text dimColor size="caption">{COPY.sessionOnly}</Text> : null}
-        {isComfy ? <Link href="https://thecompdesk.com/claude" label={COPY.footerLink} /> : null}
         <Box flexDirection="row" flexWrap="wrap" gap={1}>
-          {visible.length > 0 ? <Button key="customize" label={COPY.customize} onPress={() => setView({ name: 'customize', clearArmed: false })} /> : null}
-          <Button key="close" role="dismiss" label={COPY.close} onPress={async () => { try { await $.ui.close({ id: PANE_ID }) } catch { /* already closed */ } }} />
+          <Button key="customize" label={COPY.customize} onPress={() => setView({ name: 'customize', clearArmed: false })} />
+          <Button key="close" role="dismiss" label={COPY.close} onPress={() => closeDesk($)} />
+          {isComfy ? <Link href="https://thecompdesk.com/claude" label={COPY.footerLink} /> : null}
         </Box>
       </Box>
     </Box>
@@ -134,12 +141,17 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
     const waiting = drs.filter(d => d.review === 'waiting')
     const oldest = waiting.reduce<number | null>((a, d) => a === null || d.at < a ? d.at : a, null)
     const newestDone = figs.filter(f => f.status === 'done').reduce<number | null>((a, f) => a === null || f.at > a ? f.at : a, null)
-    const firstWhen = latest[0]?.checklist?.hearings[0]?.when ?? ''
+    const todays = latest.find(d => d.base === today)
+    const nextToday = todays === undefined ? undefined : hearingsOf(todays).find(hg => hg.open > 0)
+    const firstWhen = (latest[0] === undefined ? undefined : hearingsOf(latest[0])[0])?.when ?? ''
+    const hearingsSub = todays !== undefined
+      ? (nextToday !== undefined && nextToday.when !== '' ? COPY.gToday(nextToday.when) : nextToday === undefined ? COPY.gTodayDone : COPY.gNone)
+      : n.hearings > 0 && firstWhen !== '' ? COPY.gFirst(firstWhen) : COPY.gNone
     const cells: { label: string; value: number; sub: string; isSignal: boolean }[] = [
       { label: COPY.gReview, value: n.review, sub: n.review > 0 && oldest !== null ? COPY.gOldest(age(oldest)) : COPY.gAllClear, isSignal: true },
       { label: COPY.gVerify, value: n.verify, sub: n.verify > 0 ? COPY.gInLists(n.checklistsToVerify) : COPY.gNone, isSignal: true },
       { label: COPY.gFigures, value: n.figuresDone, sub: n.figuresDone > 0 && newestDone !== null ? COPY.gNewest(age(newestDone)) : COPY.gNoneYet, isSignal: false },
-      { label: COPY.gHearings, value: n.hearings, sub: n.hearings > 0 && firstWhen !== '' ? COPY.gFirst(firstWhen) : COPY.gNone, isSignal: false },
+      { label: COPY.gHearings, value: n.hearings, sub: n.hearings > 0 ? hearingsSub : COPY.gNone, isSignal: false },
     ]
     const width = cols >= 56 ? '25%' : '50%'
     const cell = (c: typeof cells[number]): RenderElement => (
@@ -161,7 +173,7 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
     )
   }
 
-  function section(x: SectionName): RenderElement {
+  function section(x: SectionName): RenderElement | null {
     if (x === 'review') return reviewSection()
     if (x === 'hearings') return hearingsSection()
     if (x === 'figures') return figuresSection()
@@ -211,14 +223,14 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
     const c = d.checklist
     if (d.kind === 'checklist' && c !== null && c.verify > 0) buttons.push(<Button key={`rv-verify-${d.id}`} label={COPY.verifyItems} onPress={fill(COPY.fillVerify(d.name))} />)
     if (d.kind === 'document' && p.names === 'show') buttons.push(<Button key={`rv-sum-${d.id}`} label={COPY.summarize} onPress={fill(COPY.fillSummarize(d.name))} />)
-    if (isComfy && d.kind === 'checklist' && d.isStale) buttons.push(<Button key={`rv-recount-${d.id}`} label={COPY.recount} onPress={fill(COPY.fillRecount(d.name))} />)
+    // A stale checklist always offers Recount: the line under it says to press it.
+    if (d.kind === 'checklist' && d.isStale) buttons.push(<Button key={`rv-recount-${d.id}`} label={COPY.recount} onPress={fill(COPY.fillRecount(d.name))} />)
     buttons.push(mark)
-    if (isComfy && d.path !== null) {
-      if (e.surface === 'terminal') buttons.push(<Link href={'file://' + encodeURI(d.path)} label={COPY.openFile} />)
-      else {
-        const key = `rv-path-${d.id}`
-        buttons.push(<Button key={key} label={copiedLabel(key, COPY.copyPath)} onPress={copy(d.path, key)} />)
-      }
+    // The path goes to the clipboard on a press, on every surface; it is never drawn, never a link, and is left
+    // out while names are hidden.
+    if (isComfy && d.path !== null && p.names === 'show') {
+      const key = `rv-path-${d.id}`
+      buttons.push(<Button key={key} label={copiedLabel(key, COPY.copyPath)} onPress={copy(d.path, key)} />)
     }
     return (
       <Box flexDirection="column">
@@ -236,20 +248,23 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
   function reviewSection(): RenderElement {
     const waiting = drs.filter(d => d.review === 'waiting').sort((a, b) => b.order - a.order || b.at - a.at)
     const reviewed = drs.filter(d => d.review === 'reviewed').sort((a, b) => (b.reviewedAt ?? 0) - (a.reviewedAt ?? 0))
-    const w = waiting.slice(0, isComfy ? 10 : 6)
+    const shownWaiting = waiting.slice(0, isComfy ? 10 : 6)
     const r = reviewed.slice(0, 3)
     const rest = reviewed.length - r.length
     const ready = lk.notesReady.length
+    const waitingNotes = lk.notesWaiting ?? 0
     const needs = lk.imports?.needsReview ?? 0
-    const isEmpty = drs.length === 0 && ready === 0 && needs === 0
+    const isEmpty = drs.length === 0 && ready === 0 && waitingNotes === 0 && needs === 0
     return (
       <Box flexDirection="column">
         {heading(COPY.secReview, n.review)}
         {isEmpty ? lines(COPY.reviewEmpty(guard)) : null}
-        {w.map(reviewRow)}
+        {shownWaiting.map(reviewRow)}
         {r.map(reviewRow)}
         {rest > 0 ? <Text dimColor>{COPY.moreReviewed(rest)}</Text> : null}
-        {ready > 0 ? <Box flexDirection="column"><Text>{COPY.notesReady(ready)}</Text><Text dimColor>{COPY.notesReadySub}</Text></Box> : null}
+        {ready > 0 || waitingNotes > 0
+          ? <Box flexDirection="column"><Text>{COPY.notesLine(waitingNotes, ready)}</Text>{ready > 0 ? <Text dimColor>{COPY.notesReadySub}</Text> : null}</Box>
+          : null}
         {needs > 0 ? <Box flexDirection="column"><Text>{COPY.importsReview(needs)}</Text><Link href="https://thecompdesk.com/workspace" label={COPY.openWorkspace} /></Box> : null}
         {isComfy && drs.length > 0 ? <Text dimColor size="caption">{COPY.reviewFooter}</Text> : null}
       </Box>
@@ -258,6 +273,7 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
 
   function hearingsSection(): RenderElement {
     const total = latest.reduce((a, d) => a + (d.checklist?.hearings.length ?? 0), 0)
+    const hasToday = latest.some(d => d.base === today)
     const cap = isComfy ? 12 : 6
     const namesButton = total > 0
       ? <Button key="names" label={p.names === 'show' ? COPY.hideNames : COPY.showNames} onPress={change(cur => ({ names: cur.names === 'show' ? 'hide' : 'show' }))} />
@@ -265,10 +281,12 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
     const blocks: RenderElement[] = []
     let shownCount = 0
     for (const d of latest) {
+      if (shownCount >= cap) break
       const c = d.checklist
       if (c === null) continue
-      if (latest.length > 1) blocks.push(<Text dimColor>{c.dateLine ?? d.name}</Text>)
-      for (const hg of c.hearings) {
+      if (d.base === today) blocks.push(<Text weight="semibold">{COPY.todayLine(c.dateLine ?? d.name)}</Text>)
+      else if (latest.length > 1 || hasToday) blocks.push(<Text dimColor>{c.dateLine ?? d.name}</Text>)
+      for (const hg of hearingsOf(d)) {
         if (shownCount >= cap) break
         shownCount += 1
         const masked = COPY.hearingMasked(hg.n)
@@ -364,7 +382,25 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
     )
   }
 
-  function connectionSection(): RenderElement {
+  // Calm while the Hub answers: one dim line, and what was sent this session. The full block only when
+  // something needs the person: a Hub problem, a Hub not listed, or a Pro Workspace that cannot answer.
+  function connectionSection(): RenderElement | null {
+    const isWsTrouble = lk.workspace === 'sign-in' || lk.workspace === 'not-entitled' || lk.workspace === 'no-answer'
+    const isHubTrouble = lk.problem !== null || lk.tools === 0
+    const isImportInReview = p.sections.review && (lk.imports?.needsReview ?? 0) > 0
+    const record: string[] = []
+    if (lk.sent !== null) record.push(COPY.sentLine(lk.sent))
+    if (lk.imports !== null && !isImportInReview) record.push(COPY.importLine(lk.imports))
+    if (!isWsTrouble && !isHubTrouble) {
+      const isConnected = lk.lastAnswerAt !== null || (lk.tools ?? 0) > 0
+      if (!isConnected && record.length === 0) return null
+      return (
+        <Box flexDirection="column">
+          {isConnected ? <Text dimColor size="caption">{COPY.hubConnected}</Text> : null}
+          {record.map(t => <Text dimColor>{t}</Text>)}
+        </Box>
+      )
+    }
     const hubLine = lk.problem !== null ? <Text color="warning">{COPY.hubProblem(lk.problem)}</Text>
       : lk.lastAnswerAt !== null ? <Text color="success">{COPY.hubAnswered(age(lk.lastAnswerAt))}</Text>
       : lk.tools !== null && lk.tools > 0 ? <Text color="success">{COPY.hubListed(lk.tools)}</Text>
@@ -374,16 +410,14 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
       : lk.workspace === 'sign-in' ? <Text color="warning">{COPY.wsSignIn}</Text>
       : lk.workspace === 'not-entitled' ? <Text>{COPY.wsNotEntitled}</Text>
       : lk.workspace === 'no-answer' ? <Text>{COPY.wsNoAnswer}</Text>
-      : <Box flexDirection="column"><Text>{COPY.wsUnknown}</Text>{isNarrow ? null : <Text dimColor>{COPY.wsUnknownSub}</Text>}</Box>
+      : null
     return (
       <Box flexDirection="column">
         {heading(COPY.secConnection, null)}
         <Box flexDirection="row" flexWrap="wrap" gap={1}>{hubLine}<Button key="check" label={COPY.checkAgain} onPress={() => recheckTools($)} /></Box>
         {ws}
-        {isNarrow ? null : <Button key="check-ws" label={COPY.checkWorkspace} onPress={fill(COPY.fillCheckWorkspace)} />}
-        {lk.sent !== null ? <Text>{COPY.sentLine(lk.sent)}</Text> : null}
-        {lk.imports !== null ? <Text>{COPY.importLine(lk.imports)}</Text> : null}
-        {lk.notesWaiting !== null ? <Text>{COPY.notesWaiting(lk.notesWaiting)}</Text> : null}
+        {isNarrow || !usesWorkspace ? null : <Button key="check-ws" label={COPY.checkWorkspace} onPress={fill(COPY.fillCheckWorkspace)} />}
+        {record.map(t => <Text>{t}</Text>)}
         <Text dimColor>{COPY.sendsLine(guard)}</Text>
       </Box>
     )
@@ -401,8 +435,9 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
     add('qa-offer', COPY.qaOffer, COPY.fillOffer)
     if (hasDone) add('qa-slu', COPY.qaSlu, COPY.fillSlu)
     else add('qa-rate', COPY.qaRate, COPY.fillRate)
+    // The paid Pro Workspace step shows only to someone who uses it in this session.
     if ((lk.notesWaiting ?? 0) > 0) add('qa-notes', COPY.qaNotes, COPY.fillNotes)
-    else add('qa-ws', COPY.qaWorkspace, COPY.fillWorkspace)
+    else if (usesWorkspace) add('qa-ws', COPY.qaWorkspace, COPY.fillWorkspace)
     if (!hasChecklist && picks.length < 6) add('qa-open', COPY.qaOpenChecklist, COPY.fillOpenChecklist)
     if (picks.length < 6) add('qa-rate', COPY.qaRate, COPY.fillRate)
     if (picks.length < 6) add('qa-term', COPY.qaTerm, COPY.fillTerm)
@@ -486,13 +521,6 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
   function customizeView(): RenderElement {
     const presets: readonly PresetName[] = ['desk', 'focus', 'figures', 'glance', 'quiet']
     const looks: readonly Look[] = ['app', 'paper', 'paper-light', 'paper-night']
-    const reset = async (): Promise<void> => {
-      await $.store.delete('prefs').catch(() => undefined)
-      const fresh = prefsFrom(options)
-      await update($, prefs, () => fresh)
-      await applyLook($, fresh)
-      await syncStatus($)
-    }
     const clear = async (): Promise<void> => {
       const cur = await read($, view)
       if (!cur.clearArmed) { await update($, view, x => ({ ...x, clearArmed: true })); return }
@@ -520,7 +548,7 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
         {choiceRow(COPY.cMotion, (['subtle', 'off'] as const).map(x => ({ key: `m-${x}`, label: COPY.motionName[x], isOn: p.motion === x, press: change({ motion: x }) })), [COPY.motionNote])}
         <Text dimColor size="caption">{COPY.savedNote}</Text>
         <Box flexDirection="row" flexWrap="wrap" gap={1}>
-          <Button key="reset" label={COPY.backToOptions} onPress={reset} />
+          <Button key="reset" label={COPY.startOver} onPress={() => resetPrefs($)} />
           <Button key="clear" label={v.clearArmed ? COPY.clearArmed : COPY.clearDesk} onPress={clear} />
           <Button key="done" variant="primary" label={COPY.done} onPress={() => setView({ name: 'desk', clearArmed: false })} />
         </Box>

@@ -3,6 +3,7 @@ import type { Engine } from 'claude-code/testing'
 import type { Draft, Figure, Prefs } from '../types'
 import { COPY } from '../hooks/copy'
 import { copyText } from '../hooks/hub'
+import { DEFAULT_PREFS } from '../hooks/prefs'
 import { engine, HUB, PANE, PEEK, peek, START, SURFACES } from './engine'
 import { CHECKLIST, CHECKLIST_FILE, CHECKLIST_FILE_V2, CHECKLIST_TICKED, PLUGIN, reply, SLU_OK } from './fixtures'
 
@@ -32,7 +33,8 @@ test('29. the empty desk explains itself on every surface', async ($, on) => {
       expect((await ui.find({ type: 'Text', text: line ?? '' }))?.text).toBe(line)
     }
     expect((await ui.find({ type: 'Link' }))?.props.href).toBe('https://thecompdesk.com/claude')
-    expect(await headings(ui)).toEqual(['For your review', 'Hearings', 'Hub figures', 'Connection', 'Next steps'])
+    // Connection stays out of the way until something needs the person.
+    expect(await headings(ui)).toEqual(['For your review', 'Hearings', 'Hub figures', 'Next steps'])
     await ui.unmount()
   }
 })
@@ -95,8 +97,12 @@ test('33. presets change the sections and their order', async ($, on) => {
       await ui.press({ key: 'done' })
     }
     await pick('p-glance')
-    expect(await ui.find({ type: 'Text', text: COPY.sectionsOff })).toBeDefined()
+    // Glance is the four counts by design: no note that sections are off.
+    expect(await ui.find({ type: 'Text', text: COPY.sectionsOff })).toBeUndefined()
     expect(await headings(ui)).toEqual([])
+    expect(await ui.find({ type: 'Button', key: 'customize' })).toBeDefined()
+    await pick('b-band')
+    expect(await ui.find({ type: 'Text', text: COPY.sectionsOff })).toBeDefined()
     await pick('p-focus')
     expect(await headings(ui)).toEqual(['For your review', 'Hearings'])
     await pick('p-figures')
@@ -193,7 +199,7 @@ test('37. Details, Copy with inputs and Back', { plugins: [PEEK] }, async ($, on
   expect(text.split('\n')[0]).toBe('Schedule loss of use award (Hub estimate)')
 })
 
-test('38. Customize: the Paper look, the app look and Back to my plugin options', async ($, on) => {
+test('38. Customize: the Paper look, the app look and Back to the starting layout', async ($, on) => {
   const log = engine(on)
   await $.session.start(START)
   const ui = await $.ui.mount(desk('desktop'))
@@ -237,30 +243,27 @@ test('39. Clear this session\'s desk asks twice, then empties it', { plugins: [P
   await ui.unmount()
 })
 
-test('40. the file: a link on the terminal, Copy path elsewhere', async ($, on) => {
+test('40. the file: Copy path on every surface, never a file link; none while names are hidden', async ($, on) => {
   const log = engine(on)
   await writeChecklist($)
   for (const surface of SURFACES) {
     const ui = await $.ui.mount(desk(surface))
-    const files = (await ui.findAll({ type: 'Link' })).filter(l => String(l.props.href).startsWith('file://'))
-    if (surface === 'terminal') {
-      expect(files).toHaveLength(1)
-      expect(await ui.find({ type: 'Button', key: 'rv-path-w1' })).toBeUndefined()
-    } else {
-      expect(files).toHaveLength(0)
-      await ui.press({ key: 'rv-path-w1' })
-      expect(log.copies[log.copies.length - 1]).toBe(CHECKLIST_FILE)
-      expect((await ui.find({ type: 'Button', key: 'rv-path-w1' }))?.props.label).toBe(COPY.copied)
-    }
+    expect((await ui.findAll({ type: 'Link' })).filter(l => !String(l.props.href).startsWith('https://'))).toEqual([])
+    await ui.press({ key: 'rv-path-w1' })
+    expect(log.copies[log.copies.length - 1]).toBe(CHECKLIST_FILE)
+    expect((await ui.find({ type: 'Button', key: 'rv-path-w1' }))?.props.label).toBe(COPY.copied)
+    await ui.press({ key: 'names' })
+    expect(await ui.find({ type: 'Button', key: 'rv-path-w1' })).toBeUndefined()
+    await ui.press({ key: 'names' })
     await ui.unmount()
   }
 })
 
-async function withRunningFigure($: Engine, on: Parameters<typeof engine>[0], check: () => Promise<void>): Promise<void> {
+async function withRunningFigure($: Engine, on: Parameters<typeof engine>[0], check: () => Promise<void>, prefs?: Prefs): Promise<void> {
   let release: () => void = () => undefined
   const gate = new Promise<void>(r => { release = r })
   on('tool.call', { tool: SLU }, async () => { await gate; return reply(SLU_OK) as never })
-  engine(on)
+  engine(on, prefs === undefined ? {} : { store: { prefs } })
   await $.session.start(START)
   const call = $.tool.call({ tool: SLU, tool_use_id: 't-run', ...SLU_ARGS })
   for (let i = 0; i < 50; i += 1) {
@@ -285,7 +288,7 @@ test('41. while the Hub calculates: a soft dot off the terminal, words everywher
   })
 })
 
-test('41b. motion off: no dot anywhere', { plugins: [PEEK], options: { motion: 'off' } }, async ($, on) => {
+test('41b. motion off: no dot anywhere', { plugins: [PEEK] }, async ($, on) => {
   await withRunningFigure($, on, async () => {
     for (const surface of SURFACES) {
       const ui = await $.ui.mount(desk(surface))
@@ -293,7 +296,7 @@ test('41b. motion off: no dot anywhere', { plugins: [PEEK], options: { motion: '
       expect(await ui.find({ type: 'Svg' })).toBeUndefined()
       await ui.unmount()
     }
-  })
+  }, { ...DEFAULT_PREFS, motion: 'off' })
 })
 
 test('42. a -v2 checklist replaces v1 in Hearings; both wait for review', { plugins: [PEEK] }, async ($, on) => {

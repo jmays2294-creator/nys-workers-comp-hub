@@ -6,7 +6,7 @@
     {
       "name": "nys-workers-comp-hub",
       "source": "./nys-workers-comp-hub",
-      "description": "New York State workers' compensation in Claude: calculators, rates, forms, the glossary and explainers, case law, a NYC doctor finder, eleven free skills, sending cases to your Comp Desk Pro Workspace, and posting your hearing notes into your case-management system."
+      "description": "New York State workers' compensation in Claude: calculators, rates, forms, the glossary and explainers, case law, a NYC doctor finder, eleven free skills, sending cases to your Comp Desk Pro Workspace, and posting your hearing notes into your case-management system. In Claude Code it also adds The Comp Desk suite: a desk beside the chat with drafts for your review and every Hub figure with its inputs."
     }
   ]
 }

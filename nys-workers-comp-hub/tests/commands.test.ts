@@ -1,8 +1,8 @@
 import { expect, test } from 'claude-code/testing'
 import type { Prefs } from '../types'
 import { COPY } from '../hooks/copy'
-import { prefsFrom, stampOf } from '../hooks/prefs'
-import { engine, PEEK, peek, RUN, START } from './engine'
+import { DEFAULT_PREFS } from '../hooks/prefs'
+import { engine, HUB, PANE, PEEK, peek, RUN, START } from './engine'
 
 const run = (command: string, args = '') => ({ ...RUN, command, args })
 
@@ -94,15 +94,15 @@ test('68. by default the app keeps its own look at start', async ($, on) => {
   expect(log.clears).toBe(0)
 })
 
-test('68b. with the paper look chosen in /config, it is set once at start', { options: { look: 'paper' } }, async ($, on) => {
-  const log = engine(on)
+test('68b. with the paper look chosen on the desk, it is set once at start', async ($, on) => {
+  const log = engine(on, { store: { prefs: { ...DEFAULT_PREFS, look: 'paper' } } })
   await $.session.start(START)
   expect(log.themes).toHaveLength(1)
   expect((log.themes[0]?.colors as { label?: string } | undefined)?.label).toBe('The Comp Desk Paper')
 })
 
-test('69. stored choices made under the same /config values are kept', { plugins: [PEEK] }, async ($, on) => {
-  const stored: Prefs = { ...prefsFrom({}), look: 'paper-light', preset: 'custom', cards: 'off' }
+test('69. stored choices are kept from session to session', { plugins: [PEEK] }, async ($, on) => {
+  const stored: Prefs = { ...DEFAULT_PREFS, look: 'paper-light', preset: 'custom', cards: 'off' }
   const log = engine(on, { store: { prefs: stored } })
   await $.session.start(START)
   expect(log.themes).toHaveLength(1)
@@ -111,12 +111,30 @@ test('69. stored choices made under the same /config values are kept', { plugins
   expect((await peek<Prefs>($, 'prefs')).cards).toBe('off')
 })
 
-test('69b. a /config change wins over choices stored under other values', { plugins: [PEEK], options: { desk_layout: 'focus' } }, async ($, on) => {
-  const stored: Prefs = { ...prefsFrom({}), look: 'paper-light' }
-  expect(stored.stamp).not.toBe(stampOf({ desk_layout: 'focus' }))
+test('69b. a /config change keeps every Customize choice: /config holds none of them', { plugins: [PEEK], options: { send_guard: 'hub-only', open_desk: 'on-hub-work' } }, async ($, on) => {
+  const stored: Prefs = { ...DEFAULT_PREFS, look: 'paper-light', preset: 'focus', density: 'compact', names: 'hide', motion: 'off' }
   const log = engine(on, { store: { prefs: stored } })
   await $.session.start(START)
+  await $.session.start(START)
+  expect(log.deleted).toEqual([])
+  expect(await peek<Prefs>($, 'prefs')).toEqual(stored)
+})
+
+test('69c. a stored value the suite cannot read is dropped for the starting choices', { plugins: [PEEK] }, async ($, on) => {
+  const log = engine(on, { store: { prefs: { v: 1, preset: 'nonsense' } } })
+  await $.session.start(START)
   expect(log.deleted).toEqual(['prefs'])
-  expect(log.themes).toHaveLength(0)
-  expect(await peek<Prefs>($, 'prefs')).toEqual(prefsFrom({ desk_layout: 'focus' }))
+  expect(await peek<Prefs>($, 'prefs')).toEqual(DEFAULT_PREFS)
+})
+
+test('69d. Back to the starting layout, on the desk: the stored choices go, and the desk says so', { plugins: [PEEK] }, async ($, on) => {
+  const log = engine(on, { store: { prefs: { ...DEFAULT_PREFS, preset: 'focus', sections: { ...DEFAULT_PREFS.sections, figures: false, connection: false, next: false } } } })
+  await $.session.start(START)
+  const ui = await $.ui.mount({ plugin: HUB, surface: 'desktop', component: 'Pane', requestId: 'comp-desk', props: PANE })
+  await ui.press({ key: 'customize' })
+  expect((await ui.find({ type: 'Button', key: 'reset' }))?.props.label).toBe(COPY.startOver)
+  await ui.press({ key: 'reset' })
+  await ui.unmount()
+  expect(log.deleted).toEqual(['prefs'])
+  expect(await peek<Prefs>($, 'prefs')).toEqual(DEFAULT_PREFS)
 })

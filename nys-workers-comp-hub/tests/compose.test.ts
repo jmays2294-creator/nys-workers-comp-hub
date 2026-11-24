@@ -12,6 +12,8 @@ test('74. the working conventions: one constant section, last, for this session'
     expect(last?.scope).toBe('session')
     expect(last?.text).toBe(COPY.conventions)
   }
+  // The Pro Workspace tools take the claimant label the prep-to-workspace skill describes.
+  expect(COPY.conventions.split('\n').some(l => l.includes('add_workspace_cases') && l.includes('claimant label'))).toBe(true)
 })
 
 test('74b. turned off in /config, the sections are left as they were', { options: { working_conventions: false } }, async ($, on) => {

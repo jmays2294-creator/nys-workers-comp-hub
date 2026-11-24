@@ -2,28 +2,53 @@
 // a note under a draft or an unsent email draft. A card never shows a file name, a path or a subject.
 import { atom, memberOf, read, update } from 'claude-code'
 import type { EngineInterface, RenderElement, RenderInput, UiPressArgument } from 'claude-code'
-import type { Draft, Figure } from '../types'
-import { copyOut, fillPrompt, openDesk } from './actions'
+import type { ChecklistCounts, Draft, Figure } from '../types'
+import { copyOut, fillPrompt, isHubCall, openDesk } from './actions'
 import { COPY } from './copy'
 import { checklistBase, isChecklistPath, parseChecklist } from './checklist'
-import { MAX_PARSE } from './drafts'
+import { baseName } from './drafts'
 import { copyText, distill, emptyFigure, headlineText, isHubPayload, isRecord, lastSegment, num, payloadOfOutput, SIGN_IN, str } from './hub'
 import { DEFAULT_PREFS } from './prefs'
 
 const figures = atom({ plugin: 'nys-workers-comp-hub', key: 'figures' } as const, [], { shape: 'figures-1' })
 const drafts = atom({ plugin: 'nys-workers-comp-hub', key: 'drafts' } as const, [], { shape: 'drafts-1' })
-const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-1' })
+const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-2' })
 const isCardOpen = atom({ plugin: 'nys-workers-comp-hub', key: 'isCardOpen' } as const, false)
 
 const SIGN_IN_TEXT = /sign in|sign-in|expired|revoked|insufficient_scope|unauthori/i
+
+// A checklist row this session has no record of (after a resume) is counted from the Write's own input, once per
+// tool_use_id: redraws read the count from here. Capped, and cleared with the module.
+const FALLBACK_MAX = 100_000
+const FALLBACK_KEEP = 20
+const fallbackCounts = new Map<string, ChecklistCounts>()
+
+function countedOnce(id: string, content: string): ChecklistCounts {
+  const had = fallbackCounts.get(id)
+  if (had !== undefined) return had
+  const c = parseChecklist(content)
+  fallbackCounts.set(id, c)
+  if (fallbackCounts.size > FALLBACK_KEEP) {
+    const oldest = fallbackCounts.keys().next().value
+    if (oldest !== undefined) fallbackCounts.delete(oldest)
+  }
+  return c
+}
 
 function isQuiet(e: RenderInput<'ToolUse'>): boolean {
   return e.props.isExpanded === true || e.props.isRunning
 }
 
+/** A call that was refused, failed or stopped wrote nothing: no card claims it did. */
+function isUnfinished(e: RenderInput<'ToolUse'>): boolean {
+  return e.props.isErrored || e.props.isInterrupted
+}
+
 export async function drawHubCard($: EngineInterface, e: RenderInput<'ToolUse'>, row: RenderElement): Promise<RenderElement> {
   const p = await read($, prefs)
   if (p.cards === 'off' || isQuiet(e)) return row
+  // A same-named tool on another server is not the Hub: its row is left as the engine drew it.
+  if (!(await isHubCall($, e.props.tool))) return row
   const { Box, Text, Button } = $.ui.resolve(e)
   const id = e.props.tool_use_id
   const name = lastSegment(e.props.tool)
@@ -128,7 +153,7 @@ function draftFor(list: readonly Draft[], id: string): Draft | undefined {
 
 export async function drawDraftCard($: EngineInterface, e: RenderInput<'ToolUse'>, row: RenderElement): Promise<RenderElement> {
   const p = await read($, prefs)
-  if (p.cards === 'off' || isQuiet(e)) return row
+  if (p.cards === 'off' || isQuiet(e) || isUnfinished(e)) return row
   const { Box, Text, Button } = $.ui.resolve(e)
   const id = e.props.tool_use_id
   const d = draftFor(await read($, drafts), id)
@@ -138,10 +163,10 @@ export async function drawDraftCard($: EngineInterface, e: RenderInput<'ToolUse'
   if (d === undefined && e.props.tool === 'Write' && isRecord(e.props.input)) {
     const path = str(e.props.input.file_path)
     const content = str(e.props.input.content)
-    if (path !== null && isChecklistPath(path) && checklistBase(path) !== null && content !== null && content.length <= MAX_PARSE) {
+    if (path !== null && isChecklistPath(path) && checklistBase(path) !== null && content !== null && content.length <= FALLBACK_MAX) {
       kind = 'checklist'
-      counts = parseChecklist(content)
-      fileName = path.slice(path.lastIndexOf('/') + 1)
+      counts = countedOnce(id, content)
+      fileName = baseName(path)
     }
   }
   if (kind === null) return row
@@ -169,7 +194,7 @@ export async function drawDraftCard($: EngineInterface, e: RenderInput<'ToolUse'
 
 export async function drawEmailCard($: EngineInterface, e: RenderInput<'ToolUse'>, row: RenderElement): Promise<RenderElement> {
   const p = await read($, prefs)
-  if (p.cards === 'off' || isQuiet(e)) return row
+  if (p.cards === 'off' || isQuiet(e) || isUnfinished(e)) return row
   const d = draftFor(await read($, drafts), e.props.tool_use_id)
   if (d === undefined || d.kind !== 'email') return row
   const { Box, Text } = $.ui.resolve(e)

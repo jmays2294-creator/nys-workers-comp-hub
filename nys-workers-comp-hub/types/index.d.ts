@@ -69,7 +69,7 @@ export type Draft = {
 }
 
 export type HubLink = {
-  tools: number | null             // distinct Hub tool names in $.tool.list() at the last check
+  tools: number | null             // distinct Hub tools in $.tool.list() at the last check (OWN_SERVER or hubTools)
   checkedAt: number | null
   lastAnswerAt: number | null      // last parsable Hub payload
   problem: string | null           // Hub message verbatim (rate limit, server error), else null
@@ -102,7 +102,6 @@ export type Guard = 'sends' | 'sends-and-writes' | 'hub-only'
 
 export type Prefs = {
   v: 1
-  stamp: string                    // the /config values these choices were made under (stampOf)
   preset: Preset
   order: 'review-first' | 'figures-first'
   sections: Sections
@@ -133,11 +132,12 @@ declare module 'claude-code' {
       link: Shaped<HubLink>              // shape 'link-1'
       work: Shaped<Work>                 // shape 'work-1'
       band: Shaped<Band>                 // shape 'band-1'
-      prefs: Shaped<Prefs>               // shape 'prefs-1', session mirror of $.store 'prefs'
+      prefs: Shaped<Prefs>               // shape 'prefs-2', session mirror of $.store 'prefs'
       view: Shaped<PaneView>             // shape 'view-1'
       tick: number                       // minute counter while the desk is open (ages redraw)
       isDeskOpen: boolean
       isCardOpen: StateFamily<boolean>   // "How it was made" on a card, per tool_use_id
+      hubTools: Shaped<string[]>         // shape 'hub-tools-1': full names tool.describe placed at the Hub's origin, <= 96
     }
   }
 }

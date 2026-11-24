@@ -6,7 +6,7 @@ import { CASELAW_NOTFOUND, CHECKLIST, CHECKLIST_FILE, LETTER, LETTER_FILE, PLUGI
 const SLU = `${PLUGIN}calculate_slu_award`
 const SLU_ARGS = { aww: 1200, date_of_accident: '2024-03-15', body_parts: [{ body_part: 'arm', loss_percent: 25 }], prior_payments: 0 }
 const FIGURES_NOTICE = (SLU_OK.notice as Record<string, string>).figures ?? ''
-const SECRET = /Garcia|Baptiste|DEMO-0001|hearing-checklist-/
+const CASE_TEXT = /Garcia|Baptiste|DEMO-0001|hearing-checklist-/
 
 function card(surface: (typeof SURFACES)[number], tool: string, id: string, input: unknown, extra: Record<string, unknown> = {}) {
   return { plugin: HUB, surface, component: 'ToolUse', requestId: id, props: toolRow(tool, id, input, extra) } as const
@@ -137,7 +137,7 @@ test('25. a checklist Write: a bordered card with counts only, and Open the desk
     expect(await ui.find({ type: 'Text', text: COPY.checklistCardTitle })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /2 hearings · 21 open · 8 to verify/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: COPY.draftsOnlyLine })).toBeDefined()
-    for (const t of await ui.findAll({ type: 'Text' })) expect(t.text).not.toMatch(SECRET)
+    for (const t of await ui.findAll({ type: 'Text' })) expect(t.text).not.toMatch(CASE_TEXT)
     await ui.unmount()
   }
   const ui = await $.ui.mount(card('terminal', 'Write', 'w1', input, { output: {} }))

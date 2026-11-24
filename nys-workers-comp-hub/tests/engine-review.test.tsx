@@ -5,6 +5,7 @@
 import { expect, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 import { COPY } from '../hooks/copy'
+import { DEFAULT_PREFS } from '../hooks/prefs'
 import { BAND, COMPOSE, engine, HUB, PANE, PEEK, peek, RUN, skillArgs, START, SURFACES, toolRow } from './engine'
 import { CHECKLIST, CHECKLIST_FILE, PLUGIN, reply, SLU_OK } from './fixtures'
 
@@ -132,24 +133,28 @@ const TICK = {
   },
 }
 
-test('E3. one minute tick per loaded module, however often session.start runs; it counts only while the desk is open', { plugins: [TICK] }, async ($, on) => {
+test('E3. the minute tick runs only while the desk is up: one interval, however often it opens or session.start runs', { plugins: [TICK] }, async ($, on) => {
   let periods = 0
   on('clock.every', { ms: 60_000 }, (_, e, next) => { periods += 1; return next(e) })
   const log = engine(on, {})
   const tick = async (): Promise<unknown> => JSON.parse((await $.command.run({ ...RUN, command: 'tcd-tick', args: '' })).text ?? 'null')
   await $.session.start(START)
   await $.session.start(START)
-  await $.session.start(START)
   await log.clock.advance(5 * 60_000)
-  // One interval: its first period, then one more each minute.
-  expect(periods).toBe(6)
+  // No desk, no interval: the worker is not woken.
+  expect(periods).toBe(0)
   expect(await tick()).toEqual([0, false])
   await $.command.run({ ...RUN, command: 'comp-desk', args: '' })
+  await $.command.run({ ...RUN, command: 'comp-desk', args: '' })
+  await $.session.start(START)
   await log.clock.advance(2 * 60_000)
   expect(await tick()).toEqual([2, true])
+  // One interval: its first period, then one more each minute.
+  expect(periods).toBe(3)
   await $.command.run({ ...RUN, command: 'comp-desk', args: 'close' })
   await log.clock.advance(3 * 60_000)
   expect(await tick()).toEqual([2, false])
+  expect(periods).toBe(3)
 })
 
 test('E4. session.start again, as a reload raises it, keeps the session desk and the person\'s choices', { plugins: [PEEK] }, async ($, on) => {
@@ -172,8 +177,8 @@ test('E4. session.start again, as a reload raises it, keeps the session desk and
   }
 })
 
-test('E5. a model-written checklist that numbers two hearings alike still draws the desk', { options: { desk_density: 'comfortable' } }, async ($, on) => {
-  engine(on, {})
+test('E5. a model-written checklist that numbers two hearings alike still draws the desk', async ($, on) => {
+  engine(on, { store: { prefs: { ...DEFAULT_PREFS, density: 'comfortable' } } })
   await $.session.start(START)
   await $.tool.call({ tool: 'Write', tool_use_id: 'w1', file_path: CHECKLIST_FILE, content: CHECKLIST.replace('## 2. ', '## 1. ') })
   for (const surface of SURFACES) {

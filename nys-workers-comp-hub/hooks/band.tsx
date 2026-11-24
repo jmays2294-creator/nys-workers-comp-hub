@@ -2,7 +2,7 @@
 // runs. It carries counts and the Hub's own words, never a name, a path or a subject.
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, PluginOptions, RenderElement, RenderInput, UiPressArgument } from 'claude-code'
-import { fillPrompt, openDesk } from './actions'
+import { fillPrompt, isDeskShown, openDesk } from './actions'
 import { COPY } from './copy'
 import { deskNumbers } from './drafts'
 import { DEFAULT_PREFS, OPEN_DESK, opt } from './prefs'
@@ -12,14 +12,16 @@ const drafts = atom({ plugin: 'nys-workers-comp-hub', key: 'drafts' } as const, 
 const link = atom({ plugin: 'nys-workers-comp-hub', key: 'link' } as const, { tools: null, checkedAt: null, lastAnswerAt: null, problem: null, workspace: 'unknown', workspaceAt: null, sent: null, imports: null, notesWaiting: null, notesReady: [] }, { shape: 'link-1' })
 const work = atom({ plugin: 'nys-workers-comp-hub', key: 'work' } as const, { isHubWork: false, skill: null, isDraftingSkill: false, didAutoOpen: false, didOpenDesk: false, didDeclineOffer: false, isLookApplied: false, writes: 0 }, { shape: 'work-1' })
 const band = atom({ plugin: 'nys-workers-comp-hub', key: 'band' } as const, { version: 0, hiddenVersion: 0 }, { shape: 'band-1' })
-const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-1' })
+const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-2' })
 const isDeskOpen = atom({ plugin: 'nys-workers-comp-hub', key: 'isDeskOpen' } as const, false)
 
 /** The band's row, or null for none (the hook then hands the band on unchanged). */
 export async function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, options: PluginOptions): Promise<RenderElement | null> {
   const p = await read($, prefs)
   if (!p.band || e.props.hasSurvey || e.props.isWorking) return null
+  // The desk is up: by the suite's own mark, or by the engine's record (a waiting open the surface placed later).
   if (await read($, isDeskOpen)) return null
+  if (await isDeskShown($)) return null
   const b = await read($, band)
   const figs = await read($, figures)
   const lk = await read($, link)

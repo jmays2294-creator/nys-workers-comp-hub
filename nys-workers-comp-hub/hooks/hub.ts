@@ -1,7 +1,14 @@
 // Reading the Hub's own results. Pure: no $. Every figure shown comes from a Hub payload's display strings,
 // labelled; nothing here computes, rounds or reformats a figure.
 import type { Citation, Figure, FigureNotice, Pair } from '../types'
+import { clean, cleanDeep } from './clean'
 import { COPY, DEFAULT_TITLE, DISPLAY_LABELS, INPUT_LABELS, TITLES } from './copy'
+
+// Where the Hub is. A tool counts as the Hub's only when it comes from this plugin's own server (its name starts
+// with OWN_SERVER) or tool.describe reported the Hub's own origin for its server: a same-named tool on another
+// server is not the Hub, and its answers are never shown as Hub figures.
+export const OWN_SERVER = 'mcp__plugin_nys-workers-comp-hub_nys-workers-comp-hub__'
+export const HUB_ORIGIN = 'https://ltibymvlytodkemdeeox.supabase.co'
 
 // The runtime twins of register.tsx's matcher constants (those stay matcher-only).
 export const HUB_NAMES: ReadonlySet<string> = new Set([
@@ -49,8 +56,14 @@ export function lastSegment(full: string): string {
   return i < 0 ? full : full.slice(i + 2)
 }
 
-export function isHub(full: string): boolean {
+/** A Hub tool name on any server: the first test only. isHubTool says whether it is the Hub's. */
+export function isHubName(full: string): boolean {
   return full.startsWith('mcp__') && HUB_NAMES.has(lastSegment(full))
+}
+
+/** A Hub tool name from this plugin's own server, or from a server tool.describe placed at the Hub's origin. */
+export function isHubTool(full: string, described: readonly string[]): boolean {
+  return isHubName(full) && (full.startsWith(OWN_SERVER) || described.includes(full))
 }
 
 export function isRecord(v: unknown): v is Record<string, unknown> {
@@ -68,7 +81,7 @@ export function num(v: unknown): number {
 export function parsePayload(text: unknown): Payload | null {
   if (typeof text !== 'string' || text.length > 200_000) return null
   try {
-    const v: unknown = JSON.parse(text)
+    const v: unknown = cleanDeep(JSON.parse(text))
     return isRecord(v) ? v : null
   } catch {
     return null
@@ -96,11 +109,16 @@ export function payloadOfOutput(output: unknown): Payload | null {
   if (typeof output === 'string') return parsePayload(output)
   if (Array.isArray(output)) return parsePayload(firstTextBlock(output))
   if (isRecord(output)) {
-    if (isRecord(output.structuredContent)) return output.structuredContent
+    if (isRecord(output.structuredContent)) return cleanRecord(output.structuredContent)
     if (Array.isArray(output.content)) return parsePayload(firstTextBlock(output.content))
-    return output
+    return cleanRecord(output)
   }
   return null
+}
+
+function cleanRecord(v: Record<string, unknown>): Payload | null {
+  const c = cleanDeep(v)
+  return isRecord(c) ? c : null
 }
 
 export function isHubPayload(p: Payload | null): p is Payload {
@@ -108,7 +126,7 @@ export function isHubPayload(p: Payload | null): p is Payload {
 }
 
 export function humanize(key: string): string {
-  const t = key.replace(/_/g, ' ')
+  const t = clean(key).replace(/_/g, ' ')
   return t.charAt(0).toUpperCase() + t.slice(1)
 }
 
@@ -129,14 +147,14 @@ const NESTED_KNOWN: ReadonlySet<string> = new Set([
 
 function show(v: unknown, depth: number, isStrict: boolean): string {
   if (typeof v === 'number') return String(v)
-  if (typeof v === 'string') return v
+  if (typeof v === 'string') return clean(v)
   if (typeof v === 'boolean') return v ? 'yes' : 'no'
   if (depth > 3) return ''
   if (Array.isArray(v)) return v.map(x => show(x, depth + 1, isStrict)).filter(x => x !== '').join('; ')
   if (isRecord(v)) {
     return Object.entries(v).filter(([k]) => !isStrict || NESTED_KNOWN.has(k)).map(([k, x]) => {
       if (/_percent$/.test(k)) return `${show(x, depth + 1, isStrict)}%`
-      if (typeof x === 'string') return x
+      if (typeof x === 'string') return clean(x)
       return `${humanize(k)} ${show(x, depth + 1, isStrict)}`
     }).filter(x => x.trim() !== '').join(' ')
   }

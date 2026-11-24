@@ -5,37 +5,35 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, PluginOptions, Register } from 'claude-code'
 import type { Draft, Figure, HubLink, Prefs } from '../types'
-import { applyLook, autoOpen, bumpBand, clearDesk, notify, openDesk, recheckTools, savePrefs, syncStatus } from './actions'
+import { applyLook, autoOpen, bumpBand, clearDesk, closeDesk, isHubCall, markDeskClosed, notify, openDesk, PANE_ID, recheckTools, resetPrefs, savePrefs, startTick, syncStatus } from './actions'
 import { drawBand } from './band'
 import { drawDraftCard, drawEmailCard, drawHubCard } from './cards'
 import { applyEdit, checklistBase, isChecklistPath, parseChecklist, stripLineNumbers } from './checklist'
+import { clean } from './clean'
 import { COPY, SKILL_LABELS } from './copy'
 import { drawDesk } from './desk'
 import { baseName, DRAFTING_SKILLS, hasDraftMarker, isDocPath, isExcludedPath, MAX_PARSE, skillKey } from './drafts'
-import { argsOf, CALCULATORS, distill, emptyFigure, HUB_WRITE_NAMES, inputPairs, isHubPayload, isRecord, lastSegment, num, parsePayload, SIGN_IN, str, textOf } from './hub'
+import { argsOf, CALCULATORS, distill, emptyFigure, HUB_ORIGIN, inputPairs, isHubPayload, isRecord, lastSegment, num, parsePayload, SIGN_IN, str, textOf } from './hub'
 import type { Payload } from './hub'
 import { drawMenu } from './menu'
-import { applyPreset, CARDS, cleanStoredPrefs, DEFAULT_PREFS, DENSITIES, GUARDS, LOOKS, opt, PRESET_NAMES, prefsFrom, toggle } from './prefs'
+import { applyPreset, CARDS, cleanStoredPrefs, DEFAULT_PREFS, DENSITIES, freshPrefs, GUARDS, LOOKS, OPEN_DESK, opt, PRESET_NAMES, toggle } from './prefs'
 import type { PresetName } from './prefs'
-import { classify, safeToolName } from './sends'
+import { classifySafely, guardVerdict, safeToolName } from './sends'
 import type { SendKind } from './sends'
 
 const figures = atom({ plugin: 'nys-workers-comp-hub', key: 'figures' } as const, [], { shape: 'figures-1' })
 const drafts = atom({ plugin: 'nys-workers-comp-hub', key: 'drafts' } as const, [], { shape: 'drafts-1' })
 const link = atom({ plugin: 'nys-workers-comp-hub', key: 'link' } as const, { tools: null, checkedAt: null, lastAnswerAt: null, problem: null, workspace: 'unknown', workspaceAt: null, sent: null, imports: null, notesWaiting: null, notesReady: [] }, { shape: 'link-1' })
 const work = atom({ plugin: 'nys-workers-comp-hub', key: 'work' } as const, { isHubWork: false, skill: null, isDraftingSkill: false, didAutoOpen: false, didOpenDesk: false, didDeclineOffer: false, isLookApplied: false, writes: 0 }, { shape: 'work-1' })
-const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-1' })
-const view = atom({ plugin: 'nys-workers-comp-hub', key: 'view' } as const, { name: 'desk', figureId: null, copiedId: null, isAllFigures: false, clearArmed: false }, { shape: 'view-1' })
-const tick = atom({ plugin: 'nys-workers-comp-hub', key: 'tick' } as const, 0)
+const prefs = atom({ plugin: 'nys-workers-comp-hub', key: 'prefs' } as const, DEFAULT_PREFS, { shape: 'prefs-2' })
 const isDeskOpen = atom({ plugin: 'nys-workers-comp-hub', key: 'isDeskOpen' } as const, false)
+const hubTools = atom({ plugin: 'nys-workers-comp-hub', key: 'hubTools' } as const, [], { shape: 'hub-tools-1' })
 
 // Matcher constants: used as matchers only (runtime checks have their own literals). No nested quantifiers.
+// HUB_TOOL matches the Hub's tool names on any server; each hook then asks isHubCall whether the server is the Hub.
 const HUB_TOOL = /^mcp__.+__(get_max_min_rate|calculate_weekly_rate|calculate_aww|calculate_slu_award|calculate_lwec_award|calculate_ccp_award|calculate_section_32_split|calculate_burns_lien|calculate_apportionment|get_notice_deadline|lookup_formula|define_term|get_explainer|search_wc_knowledge|search_case_law|lookup_wcb_form|find_providers|list_skills|get_skill|describe_case_schema|add_workspace_cases|get_import_status|calculate_slu_percent_from_rom|calculate_slu_joint_replacement|calculate_benefit_weeks|calculate_fee_split|calculate_aww_with_adjustments|rank_radiculopathy|calculate_ccp_award_detailed|list_hearing_notes|get_hearing_note|mark_hearing_note_posted)$/
-const HUB_WRITES = /^mcp__.+__(add_workspace_cases|mark_hearing_note_posted)$/
-const SEND_SNAKE = /^mcp__.+_(?:send|reply|forward|post|publish|share|submit|invite|notify|broadcast|tweet)(?:_|$)/
-const SEND_CAMEL = /^mcp__.+__[a-z]*(?:Send|Reply|Forward|Post|Publish|Share|Submit|Invite|Notify|Broadcast|Tweet)(?:[A-Z0-9]|$)/
-const SEND_LEAD = /^mcp__.+__(?:send|reply|forward|post|publish|share|submit|invite|notify|broadcast|tweet)[A-Z]/
-const WRITE_LEAD = /^mcp__.+__(?:create|update|add|insert|upsert|edit|delete|remove|set|write|upload|move|rename|mark|apply|assign|archive|trash|label|merge)(?:[_A-Z]|$)/
+// Every connector tool: the send guard reads each name with classify() (sends.ts) and hands the rest on at once.
+const CONNECTOR_TOOL = /^mcp__/
 const EMAIL_DRAFT = /^mcp__.+__(?:create_draft|update_draft|save_draft|draft_email|create_email_draft)$/
 const DOC_PATH = /\.(?:md|markdown|txt|docx|doc|rtf|odt|html|htm|eml)$/i
 const CHECKLIST_PATH = /hearing-checklist-[0-9-]{10}[-v0-9]{0,4}\.md$/
@@ -43,9 +41,6 @@ const CHECKLIST_PATH = /hearing-checklist-[0-9-]{10}[-v0-9]{0,4}\.md$/
 const SIGN_IN_TEXT = /sign in|sign-in|expired|revoked|insufficient_scope|unauthori/i
 const NOT_ENTITLED_TEXT = /cannot use this permission/i
 const SECTION_WORDS = ['review', 'hearings', 'figures', 'connection', 'next'] as const
-
-// One minute tick per loaded module: a reload stops the old timer and starts this flag over with it.
-let isTicking = false
 
 type Ran = { deny?: string; isError?: true; result?: unknown; text?: string }
 
@@ -254,7 +249,7 @@ async function onEmailDraft($: EngineInterface, e: Record<string, unknown>, ran:
   const ww = await update($, work, v => ({ ...v, writes: v.writes + 1 }))
   await update($, drafts, l => {
     const old = key === null ? undefined : l.find(d => d.kind === 'email' && d.key === key)
-    const name = subject === null ? (old?.name ?? COPY.kindEmail) : subject.slice(0, 120)
+    const name = subject === null ? (old?.name ?? COPY.kindEmail) : clean(subject).slice(0, 120)
     if (old !== undefined) {
       const touches = old.touches.includes(id) ? old.touches : [...old.touches, id].slice(-10)
       return l.map(d => d === old ? { ...old, touches, name, at: now, order: ww.writes, review: 'waiting' as const, reviewedAt: null } : d)
@@ -272,7 +267,8 @@ async function onEmailDraft($: EngineInterface, e: Record<string, unknown>, ran:
 
 // ---- the send guard ---------------------------------------------------------------------------------------
 
-function reasonFor(kind: SendKind, name: string): string {
+function reasonFor(kind: SendKind, name: string, verdict: 'ask' | 'deny'): string {
+  if (verdict === 'deny') return COPY.guardStraightOut(safeToolName(name))
   if (kind === 'hub-write') return name === 'add_workspace_cases' ? COPY.guardWorkspace : COPY.guardPosted
   if (kind === 'send') return COPY.guardSend(safeToolName(name))
   return COPY.guardWrite(safeToolName(name))
@@ -280,27 +276,15 @@ function reasonFor(kind: SendKind, name: string): string {
 
 // ---- commands ---------------------------------------------------------------------------------------------
 
-async function resetPrefs($: EngineInterface, options: PluginOptions): Promise<void> {
-  await $.store.delete('prefs').catch(() => undefined)
-  const fresh = prefsFrom(options)
-  await update($, prefs, () => fresh)
-  await applyLook($, fresh)
-  await syncStatus($)
-}
-
-async function runDesk($: EngineInterface, args: string, options: PluginOptions): Promise<string> {
+async function runDesk($: EngineInterface, args: string): Promise<string> {
   const word = args.trim().toLowerCase()
   if (word === '' || word === 'open') {
     const opened = await openDesk($, true)
-    await recheckTools($)
     return opened.isPlaced ? COPY.deskOpened : COPY.deskWaits
   }
-  if (word === 'close') {
-    try { await $.ui.close({ id: 'comp-desk' }) } catch { /* already closed */ }
-    return COPY.deskClosed
-  }
+  if (word === 'close') { await closeDesk($); return COPY.deskClosed }
   if (word === 'clear') { await clearDesk($); return COPY.cleared }
-  if (word === 'reset') { await resetPrefs($, options); return COPY.resetDone }
+  if (word === 'reset') { await resetPrefs($); return COPY.resetDone }
   if (word === 'help') return COPY.deskHelp
   return COPY.deskUnknown
 }
@@ -352,13 +336,13 @@ async function runLook($: EngineInterface, args: string): Promise<string> {
   return COPY.lookRefused
 }
 
-async function startPrefs($: EngineInterface, options: PluginOptions): Promise<Prefs> {
-  const fresh = prefsFrom(options)
+/** The person's stored choices, or the starting ones. A stored value the suite cannot read is dropped. */
+async function startPrefs($: EngineInterface): Promise<Prefs> {
   let raw: unknown = undefined
   try { raw = await $.store.get('prefs') } catch { raw = undefined }
   const stored = cleanStoredPrefs(raw)
-  const chosen = stored !== null && stored.stamp === fresh.stamp ? stored : fresh
-  if (chosen !== stored && raw !== undefined && raw !== null) await $.store.delete('prefs').catch(() => undefined)
+  if (stored === null && raw !== undefined && raw !== null) await $.store.delete('prefs').catch(() => undefined)
+  const chosen = stored ?? freshPrefs()
   await update($, prefs, () => chosen)
   return chosen
 }
@@ -372,27 +356,32 @@ export const register: Register = (on, options) => {
     await $.command.register({ name: 'comp-desk', description: COPY.cmdDesk, argumentHint: '[open|close|clear|reset|help]', immediate: true }).catch(() => undefined)
     await $.command.register({ name: 'comp-desk-layout', description: COPY.cmdLayout, argumentHint: '[desk|focus|figures|glance|quiet] [fit|comfortable|compact] [hide|show <section>] [cards full|compact|off]', immediate: true }).catch(() => undefined)
     await $.command.register({ name: 'comp-desk-look', description: COPY.cmdLook, argumentHint: '[app|paper|paper-light|paper-night] [serif|no-serif]', immediate: true }).catch(() => undefined)
-    const p = await startPrefs($, options).catch(() => DEFAULT_PREFS)
+    const p = await startPrefs($).catch(() => DEFAULT_PREFS)
     await update($, figures, l => l.some(f => f.status === 'running') ? l.map(f => f.status === 'running' ? { ...f, status: 'error' as const } : f) : l).catch(() => undefined)
     if (p.look !== 'app') await applyLook($, p).catch(() => undefined)
-    await recheckTools($)
-    if (!isTicking) {
-      try {
-        $.clock.every(60_000, async () => {
-          if (await read($, isDeskOpen).catch(() => false)) await update($, tick, n => n + 1).catch(() => undefined)
-        })
-        isTicking = true
-      } catch { /* ages still show; they redraw at the next change */ }
-    }
+    await recheckTools($, true)
+    // After a reload the engine's record says whether the desk is still up: the tick starts again with it.
+    try {
+      const up = (await $.ui.panes()).some(x => x.id === PANE_ID && x.isPlaced)
+      await update($, isDeskOpen, () => up).catch(() => undefined)
+      if (up) startTick($)
+    } catch { /* the engine keeps no record here; isDeskOpen stands */ }
     await syncStatus($)
-    if (options.open_desk === 'on-start') await openDesk($, false)
+    // on-start opens the desk once a session: a reload (a /config change, a respawn) does not reopen one closed.
+    if (opt(options.open_desk, OPEN_DESK, 'offer') === 'on-start') {
+      const w = await read($, work).catch(() => null)
+      if (w !== null && !w.didAutoOpen) {
+        await update($, work, x => ({ ...x, didAutoOpen: true })).catch(() => undefined)
+        await openDesk($, false, true)
+      }
+    }
     return started
   }).catch(($, e, next) => next(e))
 
   // 2-4. Slash commands. Each answers its own command; nothing is sent.
   on('command.run', { command: 'comp-desk' }, async ($, e) => {
     let text: string = COPY.deskUnknown
-    try { text = await runDesk($, e.args, options) } catch { text = COPY.deskFailed }
+    try { text = await runDesk($, e.args) } catch { text = COPY.deskFailed }
     return { text, isTextDisplayOnly: true }
   })
   on('command.run', { command: 'comp-desk-layout' }, async ($, e) => {
@@ -407,7 +396,9 @@ export const register: Register = (on, options) => {
   })
 
   // 5. A Hub tool call: a running figure first, then the Hub's own answer. The answer goes up unchanged.
+  // A same-named tool on another server is handed on untouched: its answers are not Hub figures.
   on('tool.call', { tool: HUB_TOOL }, async ($, e, next) => {
+    if (!(await isHubCall($, e.tool).catch(() => false))) return next(e)
     const name = lastSegment(e.tool)
     const at = await $.clock.now().catch(() => 0)
     const id = e.tool_use_id ?? `local-${at}`
@@ -449,19 +440,36 @@ export const register: Register = (on, options) => {
     return ran
   }).catch(($, e, next) => next(e))
 
-  // 10. The send guard: a send, and the Hub's two writes, wait for the person's own yes in every mode.
-  // It never loosens a deny and never answers allow; if it fails, it asks.
-  on('tool.check', { tool: [HUB_WRITES, SEND_SNAKE, SEND_CAMEL, SEND_LEAD, WRITE_LEAD] }, async ($, e, next) => {
+  // 10. The send guard: a connector tool named as a send, and the Hub's two writes, wait for the person's own yes
+  // in every mode; one that goes straight out, with nobody to ask, is refused. Every other tool is handed on at
+  // once. It never loosens a deny and never answers allow. If it fails on a call it guards, it asks (a deny
+  // beneath stays a deny); on any other call it hands on the verdict beneath.
+  on('tool.check', { tool: CONNECTOR_TOOL }, async ($, e, next) => {
+    const kind = classifySafely(e.tool)
+    if (kind === 'other' || kind === 'draft') return next(e)
     const beneath = await next(e)
     if (beneath.decision === 'deny') return beneath
     const guard = opt(options.send_guard, GUARDS, 'sends')
-    const kind = classify(e.tool)
-    const isHubWork = (await read($, work)).isHubWork
-    const asks = kind === 'hub-write'
-      || (kind === 'send' && guard !== 'hub-only')
-      || (kind === 'write' && guard === 'sends-and-writes' && isHubWork)
-    return asks ? { decision: 'ask', reason: reasonFor(kind, lastSegment(e.tool)) } : beneath
-  }).catch(() => ({ decision: 'ask', reason: COPY.guardFallback }))
+    const isHubWork = kind === 'write' && guard === 'sends-and-writes' ? (await read($, work)).isHubWork : false
+    const isStraightOut = e.tool_use_id === undefined && e.approver === undefined && next.origin.plugin.startsWith('hook:')
+    const verdict = guardVerdict(kind, guard, isHubWork, isStraightOut)
+    return verdict === 'beneath' ? beneath : { decision: verdict, reason: reasonFor(kind, lastSegment(e.tool), verdict) }
+  }).catch(async ($, e, next) => {
+    const kind = classifySafely(e.tool)
+    if (guardVerdict(kind, opt(options.send_guard, GUARDS, 'sends'), true, false) === 'beneath') return next(e)
+    const beneath = await next(e).catch(() => null)
+    return beneath !== null && beneath.decision === 'deny' ? beneath : { decision: 'ask', reason: COPY.guardFallback }
+  })
+
+  // 10b. Which servers are the Hub: tool.describe reports each tool's server origin. Hands the description on as given.
+  on('tool.describe', { tool: HUB_TOOL }, async ($, e, next) => {
+    const described = await next(e)
+    const isHub = e.mcpServer?.origin === HUB_ORIGIN
+    await update($, hubTools, l => isHub
+      ? (l.includes(e.tool) ? l : [...l, e.tool].slice(-96))
+      : (l.includes(e.tool) ? l.filter(x => x !== e.tool) : l)).catch(() => undefined)
+    return described
+  }).catch(($, e, next) => next(e))
 
   // 11. A skill of this plugin: Hub work, and the drafts it writes belong on the desk.
   on('skill.prompt', { pluginName: 'nys-workers-comp-hub' }, async ($, e, next) => {
@@ -514,15 +522,14 @@ export const register: Register = (on, options) => {
 
   // 19. The desk closes: the view goes back to the desk. Never keeps it open.
   on('ui.close', { id: 'comp-desk' }, async ($, e, next) => {
-    await update($, isDeskOpen, () => false).catch(() => undefined)
-    await update($, view, v => ({ ...v, name: 'desk' as const, figureId: null, clearArmed: false })).catch(() => undefined)
+    await markDeskClosed($).catch(() => undefined)
     return next(e)
   }).catch(($, e, next) => next(e))
 
-  // 20. /clear empties this session's desk and starts the new conversation without Hub work;
-  // layout choices and the look stay.
+  // 20. /clear, or a resume into another conversation, empties this session's desk and starts the next
+  // conversation without Hub work; layout choices and the look stay. $.state outlives both, so this does it.
   on('session.end', async ($, e, next) => {
-    if (e.reason === 'clear') {
+    if (e.reason === 'clear' || e.reason === 'resume') {
       await clearDesk($).catch(() => undefined)
       await update($, work, w => ({ ...w, isHubWork: false, skill: null, isDraftingSkill: false, didAutoOpen: false, didDeclineOffer: false })).catch(() => undefined)
       await syncStatus($)

@@ -6,6 +6,7 @@
 import { expect, test } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
 import { COPY } from '../hooks/copy'
+import { DEFAULT_PREFS } from '../hooks/prefs'
 import { BAND, engine, HUB, PANE, RUN, skillArgs, START, SURFACES } from './engine'
 import { CHECKLIST, CHECKLIST_FILE, LETTER, LETTER_FILE, PLUGIN, RATE_MISSING, reply, SLU_OK } from './fixtures'
 
@@ -55,8 +56,8 @@ test('V1. every layout preset draws on every surface, narrow to wide, docked and
 })
 
 for (const density of ['fit', 'comfortable', 'compact'] as const) {
-  test(`V2. names hidden (${density}): no claimant, WCB number, file name or subject on any surface, view or width`, { options: { client_names: 'hide', desk_density: density } }, async ($, on) => {
-    engine(on, { results: results() })
+  test(`V2. names hidden (${density}): no claimant, WCB number, file name or subject on any surface, view or width`, async ($, on) => {
+    engine(on, { results: results(), store: { prefs: { ...DEFAULT_PREFS, names: 'hide', density } } })
     await fill($)
     for (const surface of SURFACES) {
       for (const bodyColumns of [24, 60, 140]) {

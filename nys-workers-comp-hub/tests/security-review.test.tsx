@@ -7,7 +7,7 @@ import type { Engine } from 'claude-code/testing'
 import type { On } from 'claude-code'
 import { COPY } from '../hooks/copy'
 import { HUB_NAMES, HUB_WRITE_NAMES } from '../hooks/hub'
-import { prefsFrom } from '../hooks/prefs'
+import { DEFAULT_PREFS } from '../hooks/prefs'
 import { BAND, COMPOSE, engine, HUB, PANE, RUN, skillArgs, START, toolRow } from './engine'
 import { CHECKLIST, CHECKLIST_FILE, CONNECTOR, LETTER, LETTER_FILE, NOTE_ID, NOTE_ONE, NOTES_LIST, PLUGIN, RATE_MISSING, reply, SLU_OK, WS_SENT, WS_STATUS } from './fixtures'
 
@@ -16,7 +16,7 @@ const GMAIL = 'mcp__claude_ai_Gmail__'
 const GUARDS = ['sends', 'sends-and-writes', 'hub-only'] as const
 const HUB_READS = [...HUB_NAMES].filter(n => !HUB_WRITE_NAMES.has(n))
 const MAIL_KEEPS = ['create_draft', 'update_draft', 'delete_draft', 'get_draft', 'list_drafts', 'get_message', 'get_thread', 'search_threads', 'list_labels']
-const PREF_KEYS = Object.keys(prefsFrom({})).sort()
+const PREF_KEYS = Object.keys(DEFAULT_PREFS).sort()
 
 // The $ calls that would reach past this session's own display: the network, the person's files, processes,
 // a model, an agent, the transcript, the environment and settings. The suite must make none of them.
