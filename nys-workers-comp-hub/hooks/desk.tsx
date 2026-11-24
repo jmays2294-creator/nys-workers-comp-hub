@@ -283,10 +283,12 @@ export async function drawDesk($: EngineInterface, e: RenderInput<'Pane'>, optio
     for (const d of latest) {
       if (shownCount >= cap) break
       const c = d.checklist
-      if (c === null) continue
+      const rows = hearingsOf(d)
+      // A checklist with no hearings in it shows under For your review only: no date, From or Recount rows here.
+      if (c === null || rows.length === 0) continue
       if (d.base === today) blocks.push(<Text weight="semibold">{COPY.todayLine(c.dateLine ?? d.name)}</Text>)
       else if (latest.length > 1 || hasToday) blocks.push(<Text dimColor>{c.dateLine ?? d.name}</Text>)
-      for (const hg of hearingsOf(d)) {
+      for (const hg of rows) {
         if (shownCount >= cap) break
         shownCount += 1
         const masked = COPY.hearingMasked(hg.n)

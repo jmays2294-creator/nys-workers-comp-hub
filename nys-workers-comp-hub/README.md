@@ -143,10 +143,13 @@ the working conventions and the right-click rows.
 
 **You approve the sends the suite recognizes.** With the default setting, a connector tool call whose name says
 it sends something outside Claude (it sends, replies, forwards, posts, publishes, shares, submits, invites,
-notifies, comments, pushes or deploys), and the Hub's Pro Workspace writes, wait for your own approval, even in
-auto mode. This applies in every Claude Code session on this computer, not only Hub work. Where nobody can
-approve (a scheduled task or a background agent), the call does not run. The suite reads tool names: it cannot
-see a send inside a shell command, a browser click or a general-purpose connector tool, so keep Claude Code's own
+notifies, comments, starts a thread, creates an issue, writes a review, pushes, deploys or starts a release), and
+the Hub's Pro Workspace writes, wait for your own approval, even in auto mode. This applies in every Claude Code
+session on this computer, not only Hub work. Where nobody can approve (a scheduled task or a background agent),
+the call does not run. A send your own settings hook makes (a hook in your Claude Code settings that calls a
+connector tool) is refused too, since nobody is asked about it, and so is one whose owner Claude Code cannot
+tell; a settings hook of your organization's keeps its own rules. The suite reads tool names: it cannot see a
+send inside a shell command, a browser click or a general-purpose connector tool, so keep Claude Code's own
 permission prompts on for those. In `/config` you can narrow this to the Hub's Pro Workspace sends, or widen it
 to record changes made by other connectors while you work with the Hub.
 

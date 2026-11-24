@@ -44,8 +44,8 @@
     },
     "send_guard": {
       "type": "string",
-      "title": "Ask before anything is sent",
-      "description": "sends: a connector tool call whose name says it sends something outside Claude (an email, a message, a post, a comment, a push or a deploy), and the Hub's Pro Workspace writes, wait for your own approval, even in auto mode. This applies in every Claude Code session on this computer, not only Hub work; where nobody can approve (a scheduled task or a background agent) the call is refused. It reads tool names, so a shell command, a browser click or a general-purpose connector tool is not covered: Claude Code's own permission prompts apply there. sends-and-writes: also asks before a connector creates or changes a record once you work with the Hub. hub-only: asks only before the Hub's Pro Workspace writes.",
+      "title": "Ask before named sends",
+      "description": "sends: a connector tool call whose name says it sends something outside Claude (an email, a message, a post, a comment, a new thread, issue or review, a push, a deploy or a release), and the Hub's Pro Workspace writes, wait for your own approval, even in auto mode. This applies in every Claude Code session on this computer, not only Hub work; where nobody can approve (a scheduled task or a background agent) the call is refused. A send your own settings hook makes is refused too, since nobody is asked about it; a settings hook of your organization's keeps its own rules. It reads tool names, so a shell command, a browser click or a general-purpose connector tool is not covered: Claude Code's own permission prompts apply there. sends-and-writes: also asks before a connector creates or changes a record once you work with the Hub. hub-only: asks only before the Hub's Pro Workspace writes.",
       "options": [
         "sends",
         "sends-and-writes",

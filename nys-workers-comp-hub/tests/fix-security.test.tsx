@@ -70,11 +70,20 @@ const MUST_ASK = [
   'mcp__slack__chat_postMessage', 'mcp__slack__conversations_add_message', 'mcp__claude_ai_Slack__slack_schedule_message',
   'mcp__twilio__messages_create', 'mcp__twilio__create_message', 'mcp__teams__create_chat_message', 'mcp__linkedin__createUgcPost',
   'mcp__github__add_issue_comment', 'mcp__x__check_and_send', 'mcp__x__Send_Message', 'mcp__Google_Drive__request_access', 'mcp__x__fax_document',
+  // A draft word does not hide a send that follows it (Gmail's drafts.send), nor one after "and".
+  'mcp__x__drafts_send', 'mcp__x__draft_and_send', 'mcp__x__draftSend', 'mcp__x__save_and_send_draft',
+  'mcp__x__draft_send_email', 'mcp__x__draft_reply_send', 'mcp__x__send_message_draft', 'mcp__composio__GMAIL_SEND_DRAFT',
 ]
 const MUST_KEEP = [
   'mcp__outlook__create_reply_draft', 'mcp__claude_ai_Slack__slack_send_message_draft', 'mcp__ms365__create-draft-email',
   'mcp__claude_ai_Gmail__create_draft', 'mcp__x__get_post', 'mcp__x__list_sent_messages', 'mcp__x__get_send_status',
   `${PLUGIN}get_hearing_note`, `${PLUGIN}list_hearing_notes`, `${PLUGIN}calculate_slu_award`,
+  // Drafts whose reply or post is a noun after "draft".
+  'mcp__x__draft_reply', 'mcp__x__draft_post',
+  // Reads about a send: a status, logs, a count, settings, history, a preview, or a prepare before the send.
+  'mcp__x__push_status', 'mcp__x__deploy_logs', 'mcp__x__post_count', 'mcp__x__reply_count', 'mcp__x__share_settings',
+  'mcp__x__invite_status', 'mcp__x__submit_status', 'mcp__x__post_history', 'mcp__x__post_preview', 'mcp__x__message_count',
+  'mcp__Higgsfield__tiktok_publish_status', 'mcp__Higgsfield__tiktok_prepare_publish', 'mcp__x__prepare_send',
 ]
 
 test('A4. the send guard hears sends in every common spelling, and leaves drafts and reads alone', async ($, on) => {

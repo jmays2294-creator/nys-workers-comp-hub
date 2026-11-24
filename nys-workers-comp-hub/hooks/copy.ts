@@ -100,7 +100,7 @@ export const COPY = {
   reviewEmpty: (guard: Guard): string[] => [
     'Nothing is waiting on you.',
     "When Claude drafts a hearing checklist, a letter or an offer response with the Hub's skills, it lands here first.",
-    guard === 'hub-only' ? 'Before anything goes to your Pro Workspace, you approve it yourself.' : 'Before a connector tool sends an email, a message or a post, you approve it yourself.',
+    guard === 'hub-only' ? 'Before anything goes to your Pro Workspace, you approve it yourself.' : 'Before a connector tool named as a send (an email, a message, a post) runs, you approve it yourself.',
     "Try saying: Prepare a hearing checklist for tomorrow's hearings from the files in this folder.",
   ],
 

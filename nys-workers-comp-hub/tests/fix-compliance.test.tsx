@@ -37,7 +37,7 @@ test('C2. the guard says what it does: connector tools named as sends, in every 
   for (const tool of ['mcp__resend__send-email', 'mcp__x__post-message', 'mcp__x__export_and_send', 'mcp__x__sendmail']) expect([tool, classify(tool)]).toEqual([tool, 'send'])
   expect(COPY.strip).toBe('Agents draft; you approve. The desk itself sends nothing.')
   expect(COPY.sendsLine('sends')).toBe('Connector tools named as sends: you approve each one yourself.')
-  expect(COPY.reviewEmpty('sends')).toContain('Before a connector tool sends an email, a message or a post, you approve it yourself.')
+  expect(COPY.reviewEmpty('sends')).toContain('Before a connector tool named as a send (an email, a message, a post) runs, you approve it yourself.')
 })
 
 test('C3. a working Hub leaves Connection as one dim line; a problem brings the block back with Check again', async ($, on) => {

@@ -2,7 +2,8 @@
 // A Pane refuses a whole tree whose Text holds a control character (an escape, a bell, a form feed, a C1
 // character), and bidi overrides or zero-width characters can show a name reversed or spoofed. Tab, line feed
 // and carriage return stay.
-const UNSAFE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F؜​-‏‪-‮⁦-⁩﻿]/g
+// Written with escapes only: a raw bidi or zero-width character in the source would itself be the spoof.
+export const UNSAFE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u061C\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g
 
 export function clean(s: string): string {
   return s.replace(UNSAFE, '')

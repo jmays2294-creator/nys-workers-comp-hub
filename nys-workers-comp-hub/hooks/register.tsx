@@ -18,7 +18,7 @@ import type { Payload } from './hub'
 import { drawMenu } from './menu'
 import { applyPreset, CARDS, cleanStoredPrefs, DEFAULT_PREFS, DENSITIES, freshPrefs, GUARDS, LOOKS, OPEN_DESK, opt, PRESET_NAMES, toggle } from './prefs'
 import type { PresetName } from './prefs'
-import { classifySafely, guardVerdict, safeToolName } from './sends'
+import { classifySafely, guardVerdict, hookOwnerOf, isStraightOut, safeToolName } from './sends'
 import type { SendKind } from './sends'
 
 const figures = atom({ plugin: 'nys-workers-comp-hub', key: 'figures' } as const, [], { shape: 'figures-1' })
@@ -441,9 +441,11 @@ export const register: Register = (on, options) => {
   }).catch(($, e, next) => next(e))
 
   // 10. The send guard: a connector tool named as a send, and the Hub's two writes, wait for the person's own yes
-  // in every mode; one that goes straight out, with nobody to ask, is refused. Every other tool is handed on at
-  // once. It never loosens a deny and never answers allow. If it fails on a call it guards, it asks (a deny
-  // beneath stays a deny); on any other call it hands on the verdict beneath.
+  // in every mode. One that goes straight out (a settings hook's own call, with nobody to ask) is refused, unless
+  // the organization's own settings hook made it: that keeps the organization's rules. Every other tool is handed
+  // on at once. It never loosens a deny and never answers allow. If it fails on a call it guards, it refuses one
+  // that goes straight out and asks about the rest (a deny beneath stays a deny); on any other call it hands on
+  // the verdict beneath.
   on('tool.check', { tool: CONNECTOR_TOOL }, async ($, e, next) => {
     const kind = classifySafely(e.tool)
     if (kind === 'other' || kind === 'draft') return next(e)
@@ -451,12 +453,13 @@ export const register: Register = (on, options) => {
     if (beneath.decision === 'deny') return beneath
     const guard = opt(options.send_guard, GUARDS, 'sends')
     const isHubWork = kind === 'write' && guard === 'sends-and-writes' ? (await read($, work)).isHubWork : false
-    const isStraightOut = e.tool_use_id === undefined && e.approver === undefined && next.origin.plugin.startsWith('hook:')
-    const verdict = guardVerdict(kind, guard, isHubWork, isStraightOut)
+    const verdict = guardVerdict(kind, guard, isHubWork, isStraightOut(e, next.origin), hookOwnerOf(next.origin))
     return verdict === 'beneath' ? beneath : { decision: verdict, reason: reasonFor(kind, lastSegment(e.tool), verdict) }
   }).catch(async ($, e, next) => {
     const kind = classifySafely(e.tool)
-    if (guardVerdict(kind, opt(options.send_guard, GUARDS, 'sends'), true, false) === 'beneath') return next(e)
+    const verdict = guardVerdict(kind, opt(options.send_guard, GUARDS, 'sends'), true, isStraightOut(e, next.origin), hookOwnerOf(next.origin))
+    if (verdict === 'beneath') return next(e)
+    if (verdict === 'deny') return { decision: 'deny', reason: COPY.guardStraightOut(safeToolName(lastSegment(e.tool))) }
     const beneath = await next(e).catch(() => null)
     return beneath !== null && beneath.decision === 'deny' ? beneath : { decision: 'ask', reason: COPY.guardFallback }
   })
