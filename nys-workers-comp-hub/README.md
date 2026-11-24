@@ -69,6 +69,9 @@ it does not create an attorney-client relationship.
   - `/nys-workers-comp-hub:slu`
   - `/nys-workers-comp-hub:section-32`
   - `/nys-workers-comp-hub:hearing-prep` (beta)
+- **In Claude Code, The Comp Desk suite:** a desk beside the chat with the drafts waiting for your review, your
+  hearings and every Hub figure with its inputs, plus cards under Hub calls and an approval step before named
+  sends. See [The Comp Desk suite in Claude Code](#the-comp-desk-suite-in-claude-code).
 
 ## Hearing prep checklist (beta)
 
@@ -123,35 +126,121 @@ your Pro Workspace", "Read the hearing notes you send to be posted", "Mark the h
 
 ## The Comp Desk suite in Claude Code
 
-In Claude Code the plugin also brings The Comp Desk suite, a desk beside the chat for New York workers'
-compensation work:
+In Claude Code the plugin also brings The Comp Desk suite: a desk beside the chat for New York workers'
+compensation work, and a few quiet additions around the chat. The suite only shows what Claude's own tool calls
+returned in this session. It computes nothing itself, and it sends nothing.
 
-- **For your review**: the hearing checklists, letters and offer responses Claude drafted with the Hub's skills
-  in this session, and the unsent email drafts a mail connector made, until you mark them reviewed. Marking one
-  reviewed only tidies the list.
-- **Hearings**: each hearing in a checklist, with its open items and the items to verify.
-- **Hub figures**: every figure the Hub's calculators returned in this session, with the inputs it used, how it
-  was made and its citations, as the Hub returned them. The suite computes nothing itself.
-- **Next steps**: one press puts a request in the prompt; nothing runs until you press Enter.
+### What it adds
 
-It also adds a card under each Hub calculator call, a quiet row above the prompt when something needs you, a
-status-line count, the commands `/comp-desk`, `/comp-desk-layout` and `/comp-desk-look`, an optional Paper look
-for the desktop and mobile apps, and right-click rows in the desktop app. Choose a layout (desk, focus, figures
-first, glance or quiet), density, sections, cards, client names, look and motion in the desk's Customize view or
-with `/comp-desk-layout` and `/comp-desk-look`. `/config` holds the rest: when the desk opens, the send guard,
-the working conventions and the right-click rows.
+- **The desk**, a pane beside the chat. `/comp-desk` opens it. At the top are four counts (for review, to verify,
+  Hub figures, hearings), then five sections:
+  - **For your review**: the hearing checklists, letters and offer responses Claude drafted with the Hub's skills
+    in this session, and the unsent email drafts a mail connector made during Hub work, newest first. It also lists
+    hearing notes waiting to be posted and any Pro Workspace imports that need your review. Marking a draft
+    reviewed only tidies the list. It does not sign, send or file anything.
+  - **Hearings**: each hearing in a checklist, today's first, with its open items and the items to verify.
+  - **Hub figures**: every figure the Hub's calculators returned in this session, with the inputs it used.
+    **Details** shows how it was made, its citations and the Hub's notices, as the Hub returned them. When a
+    calculator says an input is missing, the desk says which one and offers to add it.
+  - **Connection**: a dim "Hub connected" line while all is well, with what was sent to your Pro Workspace this
+    session. When something needs you (a Hub problem, the Hub not listed, a Pro Workspace sign-in), it shows
+    whether the Hub answered, whether you are signed in, and what the send guard asks about.
+  - **Next steps**: one press puts a request in the prompt, such as "Prep today's hearings" or "Check a Section 32
+    offer". Nothing runs until you press Enter, and it never writes over words you have typed.
+- **Cards under tool calls.** Under each Hub calculator call: the figure, its inputs and the Hub's estimate
+  notice, with **How it was made**, **Copy with inputs** and **Ask about this**. Other Hub tools get one quiet line
+  in the Hub's own words. A hearing checklist gets its counts, and a draft or an unsent email draft gets a note that
+  it is on the desk. Cards never show a file name, a path or an email subject.
+- **A row above the prompt**, only when something new needs you (a calculator that needs an input, a sign-in, a Hub
+  problem, drafts to review) and, once a session, to offer the desk. It stays out of the way while Claude is
+  working.
+- **A status line** under the prompt with the same counts during Hub work, and **short notices** when a draft
+  lands or the Pro Workspace answers a send.
+- **Right-click rows** in the desktop app: look up a selected term, date or WCB form with the Hub, or copy a figure
+  with its inputs. Each one only puts a question in the prompt or copies.
+- **Working conventions** for Claude: a short section added to Claude's instructions. It asks Claude to take
+  every figure from a Hub result with its inputs, to leave everything as a draft for your review, and to send
+  nothing without your yes. It applies only to New York workers' compensation work.
+- **The send guard**, described below.
+- **An optional Paper look** for the desktop and mobile apps, light, night or following your setting, with serif
+  headings in the desktop app.
 
-**You approve the sends the suite recognizes.** With the default setting, a connector tool call whose name says
-it sends something outside Claude (it sends, replies, forwards, posts, publishes, shares, submits, invites,
-notifies, comments, starts a thread, creates an issue, writes a review, pushes, deploys or starts a release), and
-the Hub's Pro Workspace writes, wait for your own approval, even in auto mode. This applies in every Claude Code
-session on this computer, not only Hub work. Where nobody can approve (a scheduled task or a background agent),
-the call does not run. A send your own settings hook makes (a hook in your Claude Code settings that calls a
-connector tool) is refused too, since nobody is asked about it, and so is one whose owner Claude Code cannot
-tell; a settings hook of your organization's keeps its own rules. The suite reads tool names: it cannot see a
-send inside a shell command, a browser click or a general-purpose connector tool, so keep Claude Code's own
-permission prompts on for those. In `/config` you can narrow this to the Hub's Pro Workspace sends, or widen it
-to record changes made by other connectors while you work with the Hub.
+### Where it shows
+
+| | Terminal | Desktop app | VS Code | Mobile app |
+|---|---|---|---|---|
+| The desk beside the chat | Yes | Yes | Yes | Yes |
+| Cards under tool calls | Yes | Yes | Yes | Yes |
+| Row above the prompt | Yes | Yes | Yes | Yes |
+| Right-click rows | No | Yes | No | No |
+| Paper look | No (keeps its own colors) | Yes | No (keeps its own colors) | Yes |
+
+On a narrow screen the desk switches to a compact layout. Where a screen cannot hold a pane, `/comp-desk` says so.
+
+### Commands
+
+- `/comp-desk` opens the desk. `/comp-desk close` closes it, `/comp-desk clear` empties this session's desk,
+  `/comp-desk reset` goes back to the starting layout and look, and `/comp-desk help` lists these.
+- `/comp-desk-layout` picks a layout (`desk`, `focus`, `figures`, `glance` or `quiet`) and also takes `fit`,
+  `comfortable` or `compact`, `hide` or `show` a section (`review`, `hearings`, `figures`, `connection`, `next`),
+  and `cards full`, `cards compact` or `cards off`.
+- `/comp-desk-look` picks `app`, `paper`, `paper-light` or `paper-night`, with `serif` or `no-serif`.
+
+These commands only change the desk and answer on screen; none of them sends anything.
+
+### Options
+
+In the desk's **Customize** view (layout, density, sections, cards and look also take the two commands above):
+
+- **Layout:** Desk (everything), Focus (drafts and hearings only), Figures first, Glance (the four counts only)
+  or Quiet (no row above the prompt, no status line, no notices).
+- **Density:** fit to width, comfortable or compact.
+- **Sections:** show or hide each of the five.
+- **Around the chat:** the row above the prompt, the status line and short notices, each on or off.
+- **Cards under Hub calls:** full, compact (one line) or off.
+- **Client names:** show or hide. Hidden names show as numbers, for screen sharing.
+- **Look** and **serif headings** for the desktop and mobile apps, and **motion** (a soft dot while the Hub
+  calculates; it stays still when your device asks for reduced motion).
+- **Back to the starting layout**, which also resets the look, and **Clear this session's desk**, which asks you
+  to press twice.
+
+In `/config`, under the plugin:
+
+- **When the desk opens:** `offer` (the default: the row above the prompt offers it the first time the Hub returns
+  a figure), `on-hub-work` (it opens by itself at the first Hub work in a session) or `on-start` (it opens at the
+  start of each session).
+- **Ask before named sends:** `sends` (the default), `sends-and-writes` or `hub-only`. See below.
+- **Hub working conventions for Claude:** on (the default) or off.
+- **Right-click rows (desktop app):** on (the default) or off.
+
+### You approve the sends the suite recognizes
+
+With the default setting, a connector tool call whose name says it sends something outside Claude (it sends,
+replies, forwards, posts, publishes, shares, submits, invites, notifies, comments, starts a thread, creates an
+issue, writes a review, pushes, deploys or starts a release), and the Hub's Pro Workspace writes, wait for your own
+approval, even in auto mode. This applies in every Claude Code session on this computer, not only Hub work. Where
+nobody can approve (a scheduled task or a background agent), the call does not run. A send your own settings hook
+makes (a hook in your Claude Code settings that calls a connector tool) is refused too, since nobody is asked about
+it, and so is one whose owner Claude Code cannot tell; a settings hook of your organization's keeps its own rules.
+The guard never loosens a refusal or a question that Claude Code or another plugin already raised, and it never
+approves anything for you. Making an email draft is not a send, so the guard leaves it to Claude Code's own rules;
+during Hub work the unsent draft goes on the desk for your review.
+
+The suite reads tool names: it cannot see a send inside a shell command, a browser click or a general-purpose
+connector tool, so keep Claude Code's own permission prompts on for those. In `/config` you can narrow this to the
+Hub's Pro Workspace sends (`hub-only`), or widen it to record changes made by other connectors while you work with
+the Hub (`sends-and-writes`).
+
+### Privacy
+
+- **Only your choices are kept.** The suite saves your layout, look and on/off choices on your computer, and
+  nothing about your cases.
+- **Case details stay in the session.** What the desk lists (draft names, hearings, Hub figures) is held for this
+  Claude Code session only, and `/clear` or `/comp-desk clear` empties it. Other plugins running in the same
+  session can read it.
+- **Nothing is sent anywhere.** The suite makes no network calls of its own, reads none of your files and calls
+  no model. It shows what Claude's own tool calls returned, fills the prompt only when you press, and copies only
+  when you press.
 
 The suite needs a version of Claude Code with mods turned on. If your organization turns them off, the Hub's
 tools, skills and commands work as before, and the desk and the send guard are not there; Claude Code's own
@@ -171,9 +260,9 @@ permission prompts apply.
   account; the connector keeps no copy and logs no note text.
 - The skills run in Claude. Client material they work with stays in your own files, browser and email, and is
   never sent to The Comp Desk.
-- The Comp Desk suite in Claude Code shows this session only. It saves your layout and look choices on your
-  computer and nothing about your cases. It makes no network calls of its own and reads none of your files: it
-  shows what Claude's own tool calls returned.
+- The Comp Desk suite in Claude Code keeps only your layout and look choices, on your computer. What it shows
+  about your cases stays in the Claude Code session, and it makes no network calls of its own: it sends nothing
+  to The Comp Desk or anywhere else. See "Privacy" under the suite above.
 - Privacy Policy: https://thecompdesk.com/legal/privacy · Terms: https://thecompdesk.com/terms ·
   Support: contact@thecompdesk.com
 
